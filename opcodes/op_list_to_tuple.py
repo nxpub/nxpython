@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpListToTuple(BaseOpCode):
+class OpListToTuple(OpCode):
     """
     Pops a list from the stack and pushes a tuple containing the same values.
     

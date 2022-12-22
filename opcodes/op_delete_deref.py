@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDeleteDeref(BaseOpCode):
+class OpDeleteDeref(OpCode):
     """
     Empties the cell contained in slot i of the “fast locals” storage.
     Used by the del statement.

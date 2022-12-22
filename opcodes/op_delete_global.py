@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDeleteGlobal(BaseOpCode):
+class OpDeleteGlobal(OpCode):
     """
     Works as DELETE_NAME, but deletes a global name.
 

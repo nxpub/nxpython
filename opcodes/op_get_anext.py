@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpGetAnext(BaseOpCode):
+class OpGetAnext(OpCode):
     """
     Pushes get_awaitable(TOS.__anext__()) to the stack.  See
     GET_AWAITABLE for details about get_awaitable.

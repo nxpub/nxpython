@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpExtendedArg(BaseOpCode):
+class OpExtendedArg(OpCode):
     """
     Prefixes any opcode which has an argument too big to fit into the default one
     byte. ext holds an additional byte which act as higher bits in the argument.

@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class BaseOpCode(metaclass=ABCMeta):
+class OpCode(metaclass=ABCMeta):
 
     OPCODE_NAME = None
     OPCODE_VALUE = None
@@ -9,14 +9,17 @@ class BaseOpCode(metaclass=ABCMeta):
     def __init__(self):
         pass
 
+    @classmethod
     @abstractmethod
-    def extract(self, stack):
+    def extract(cls, stack):
         raise NotImplementedError
 
+    @classmethod
     @abstractmethod
-    def transform(self, *args, **kwargs):
+    def transform(cls, *args, **kwargs):
         raise NotImplementedError
 
+    @classmethod
     @abstractmethod
-    def load(self, stack):
+    def load(cls, stack):
         raise NotImplementedError

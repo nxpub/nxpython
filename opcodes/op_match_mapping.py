@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMatchMapping(BaseOpCode):
+class OpMatchMapping(OpCode):
     """
     If TOS is an instance of collections.abc.Mapping (or, more technically: if
     it has the Py_TPFLAGS_MAPPING flag set in its

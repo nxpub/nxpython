@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadName(BaseOpCode):
+class OpLoadName(OpCode):
     """
     Pushes the value associated with co_names[namei] onto the stack.
 

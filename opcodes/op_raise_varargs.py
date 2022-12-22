@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpRaiseVarargs(BaseOpCode):
+class OpRaiseVarargs(OpCode):
     """
     Raises an exception using one of the 3 forms of the raise statement,
     depending on the value of argc:

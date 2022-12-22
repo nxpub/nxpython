@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStoreSlice(BaseOpCode):
+class OpStoreSlice(OpCode):
     """
     Implements TOS2[TOS1:TOS] = TOS3.
     

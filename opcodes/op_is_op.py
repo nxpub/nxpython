@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpIsOp(BaseOpCode):
+class OpIsOp(OpCode):
     """
     Performs is comparison, or is not if invert is 1.
     

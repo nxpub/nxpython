@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPrintExpr(BaseOpCode):
+class OpPrintExpr(OpCode):
     """
     Implements the expression statement for the interactive mode.  TOS is removed
     from the stack and printed.  In non-interactive mode, an expression statement

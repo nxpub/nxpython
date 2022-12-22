@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpKwNames(BaseOpCode):
+class OpKwNames(OpCode):
     """
     Prefixes CALL.
     Stores a reference to co_consts[consti] into an internal variable

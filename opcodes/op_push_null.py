@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPushNull(BaseOpCode):
+class OpPushNull(OpCode):
     """
     Pushes a NULL to the stack.
     Used in the call sequence to match the NULL pushed by

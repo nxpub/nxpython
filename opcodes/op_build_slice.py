@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildSlice(BaseOpCode):
+class OpBuildSlice(OpCode):
     """
     Pushes a slice object on the stack.  argc must be 2 or 3.  If it is 2,
     slice(TOS1, TOS) is pushed; if it is 3, slice(TOS2, TOS1, TOS) is

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMakeCell(BaseOpCode):
+class OpMakeCell(OpCode):
     """
     Creates a new cell in slot i.  If that slot is empty then
     that value is stored into the new cell.

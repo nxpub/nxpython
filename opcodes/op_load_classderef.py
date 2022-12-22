@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadClassderef(BaseOpCode):
+class OpLoadClassderef(OpCode):
     """
     Much like LOAD_DEREF but first checks the locals dictionary before
     consulting the cell.  This is used for loading free variables in class

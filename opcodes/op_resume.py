@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpResume(BaseOpCode):
+class OpResume(OpCode):
     """
     A no-op. Performs internal tracing, debugging and optimization checks.
     

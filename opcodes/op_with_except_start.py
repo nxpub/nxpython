@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpWithExceptStart(BaseOpCode):
+class OpWithExceptStart(OpCode):
     """
     Calls the function in position 4 on the stack with arguments (type, val, tb)
     representing the exception at the top of the stack.

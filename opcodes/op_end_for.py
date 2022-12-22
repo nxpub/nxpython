@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpEndFor(BaseOpCode):
+class OpEndFor(OpCode):
     """
     Removes the top two values from the stack.
     Equivalent to POP_TOP; POP_TOP.

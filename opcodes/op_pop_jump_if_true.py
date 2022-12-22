@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPopJumpIfTrue(BaseOpCode):
+class OpPopJumpIfTrue(OpCode):
     """
     If TOS is true, increments the bytecode counter by delta.  TOS is popped.
     

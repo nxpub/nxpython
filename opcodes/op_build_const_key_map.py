@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildConstKeyMap(BaseOpCode):
+class OpBuildConstKeyMap(OpCode):
     """
     The version of BUILD_MAP specialized for constant keys. Pops the
     top element on the stack which contains a tuple of keys, then starting from

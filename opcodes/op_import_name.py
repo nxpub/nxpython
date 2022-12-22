@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpImportName(BaseOpCode):
+class OpImportName(OpCode):
     """
     Imports the module co_names[namei].  TOS and TOS1 are popped and provide
     the fromlist and level arguments of __import__().  The module

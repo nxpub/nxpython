@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpEndAsyncFor(BaseOpCode):
+class OpEndAsyncFor(OpCode):
     """
     Terminates an async for loop.  Handles an exception raised
     when awaiting a next item.  If TOS is StopAsyncIteration pop 3

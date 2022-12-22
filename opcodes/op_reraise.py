@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpReraise(BaseOpCode):
+class OpReraise(OpCode):
     """
     Re-raises the exception currently on top of the stack. If oparg is non-zero,
     pops an additional value from the stack which is used to set f_lasti

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpSend(BaseOpCode):
+class OpSend(OpCode):
     """
     Equivalent to TOS = TOS1.send(TOS). Used in yield from and await
     statements.

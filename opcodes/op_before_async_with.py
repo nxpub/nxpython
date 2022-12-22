@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBeforeAsyncWith(BaseOpCode):
+class OpBeforeAsyncWith(OpCode):
     """
     Resolves __aenter__ and __aexit__ from the object on top of the
     stack.  Pushes __aexit__ and result of __aenter__() to the stack.

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDeleteName(BaseOpCode):
+class OpDeleteName(OpCode):
     """
     Implements del name, where namei is the index into co_names
     attribute of the code object.

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCopy(BaseOpCode):
+class OpCopy(OpCode):
     """
     Push the i-th item to the top of the stack. The item is not removed from its
     original location.

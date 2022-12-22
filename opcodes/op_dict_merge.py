@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDictMerge(BaseOpCode):
+class OpDictMerge(OpCode):
     """
     Like DICT_UPDATE but raises an exception for duplicate keys.
     

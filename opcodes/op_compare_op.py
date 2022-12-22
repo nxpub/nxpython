@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCompareOp(BaseOpCode):
+class OpCompareOp(OpCode):
     """
     Performs a Boolean operation.  The operation name can be found in
     cmp_op[opname].

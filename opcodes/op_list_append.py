@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpListAppend(BaseOpCode):
+class OpListAppend(OpCode):
     """
     Calls list.append(TOS1[-i], TOS).  Used to implement list comprehensions.
 

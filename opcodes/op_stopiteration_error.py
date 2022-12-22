@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStopiterationError(BaseOpCode):
+class OpStopiterationError(OpCode):
     """
     Handles a StopIteration raised in a generator or coroutine.
     If TOS is an instance of StopIteration, or StopAsyncIteration

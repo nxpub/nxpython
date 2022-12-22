@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildTuple(BaseOpCode):
+class OpBuildTuple(OpCode):
     """
     Creates a tuple consuming count items from the stack, and pushes the
     resulting tuple onto the stack.

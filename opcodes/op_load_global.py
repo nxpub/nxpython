@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadGlobal(BaseOpCode):
+class OpLoadGlobal(OpCode):
     """
     Loads the global named co_names[namei>>1] onto the stack.
     

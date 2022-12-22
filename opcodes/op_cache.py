@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCache(BaseOpCode):
+class OpCache(OpCode):
     """
     Rather than being an actual instruction, this opcode is used to mark extra
     space for the interpreter to cache useful data directly in the bytecode

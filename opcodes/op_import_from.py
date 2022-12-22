@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpImportFrom(BaseOpCode):
+class OpImportFrom(OpCode):
     """
     Loads the attribute co_names[namei] from the module found in TOS. The
     resulting object is pushed onto the stack, to be subsequently stored by a

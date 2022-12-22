@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpJumpBackwardNoInterrupt(BaseOpCode):
+class OpJumpBackwardNoInterrupt(OpCode):
     """
     Decrements bytecode counter by delta. Does not check for interrupts.
     

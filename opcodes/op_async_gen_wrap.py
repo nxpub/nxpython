@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpAsyncGenWrap(BaseOpCode):
+class OpAsyncGenWrap(OpCode):
     """
     Wraps the value on top of the stack in an async_generator_wrapped_value.
     Used to yield in async generators.

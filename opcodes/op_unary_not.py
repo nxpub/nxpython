@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpUnaryNot(BaseOpCode):
+class OpUnaryNot(OpCode):
     """
     Implements TOS = not TOS.
 

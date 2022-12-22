@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDeleteAttr(BaseOpCode):
+class OpDeleteAttr(OpCode):
     """
     Implements del TOS.name, using namei as index into co_names.
 

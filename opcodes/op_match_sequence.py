@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMatchSequence(BaseOpCode):
+class OpMatchSequence(OpCode):
     """
     If TOS is an instance of collections.abc.Sequence and is not an instance
     of str/bytes/bytearray (or, more technically: if it has

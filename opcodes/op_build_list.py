@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildList(BaseOpCode):
+class OpBuildList(OpCode):
     """
     Works as BUILD_TUPLE, but creates a list.
 

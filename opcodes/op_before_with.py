@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBeforeWith(BaseOpCode):
+class OpBeforeWith(OpCode):
     """
     This opcode performs several operations before a with block starts.  First,
     it loads __exit__() from the context manager and pushes it onto

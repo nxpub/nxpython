@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildString(BaseOpCode):
+class OpBuildString(OpCode):
     """
     Concatenates count strings from the stack and pushes the resulting string
     onto the stack.

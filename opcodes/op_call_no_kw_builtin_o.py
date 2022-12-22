@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCallNoKwBuiltinO(BaseOpCode):
+class OpCallNoKwBuiltinO(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """

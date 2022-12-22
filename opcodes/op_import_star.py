@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpImportStar(BaseOpCode):
+class OpImportStar(OpCode):
     """
     Loads all symbols not starting with '_' directly from the module TOS to
     the local namespace. The module is popped after loading all names. This

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpUnpackEx(BaseOpCode):
+class OpUnpackEx(OpCode):
     """
     Implements assignment with a starred target: Unpacks an iterable in TOS into
     individual values, where the total number of values can be smaller than the

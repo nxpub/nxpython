@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpBuildMap(BaseOpCode):
+class OpBuildMap(OpCode):
     """
     Pushes a new dictionary object onto the stack.  Pops 2 * count items
     so that the dictionary holds count entries:

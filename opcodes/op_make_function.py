@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMakeFunction(BaseOpCode):
+class OpMakeFunction(OpCode):
     """
     Pushes a new function object on the stack.  From bottom to top, the consumed
     stack must consist of values if the argument carries a specified flag value

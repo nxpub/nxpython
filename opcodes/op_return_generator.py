@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpReturnGenerator(BaseOpCode):
+class OpReturnGenerator(OpCode):
     """
     Create a generator, coroutine, or async generator from the current frame.
     Clear the current frame and return the newly created generator.

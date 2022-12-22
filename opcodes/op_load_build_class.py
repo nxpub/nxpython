@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadBuildClass(BaseOpCode):
+class OpLoadBuildClass(OpCode):
     """
     Pushes builtins.__build_class__() onto the stack.  It is later called
     to construct a class.

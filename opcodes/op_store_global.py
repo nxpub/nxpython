@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStoreGlobal(BaseOpCode):
+class OpStoreGlobal(OpCode):
     """
     Works as STORE_NAME, but stores the name as a global.
 

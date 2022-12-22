@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpNop(BaseOpCode):
+class OpNop(OpCode):
     """
     Do nothing code.  Used as a placeholder by the bytecode optimizer, and to
     generate line tracing events.

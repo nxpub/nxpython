@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCleanupThrow(BaseOpCode):
+class OpCleanupThrow(OpCode):
     """
     Handles an exception raised during a throw() or
     close() call through the current frame.  If TOS is an

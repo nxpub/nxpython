@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCopyFreeVars(BaseOpCode):
+class OpCopyFreeVars(OpCode):
     """
     Copies the n free variables from the closure into the frame.
     Removes the need for special code on the caller’s side when calling

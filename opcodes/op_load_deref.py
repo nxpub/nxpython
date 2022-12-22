@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadDeref(BaseOpCode):
+class OpLoadDeref(OpCode):
     """
     Loads the cell contained in slot i of the “fast locals” storage.
     Pushes a reference to the object the cell contains on the stack.

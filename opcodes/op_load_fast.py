@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadFast(BaseOpCode):
+class OpLoadFast(OpCode):
     """
     Pushes a reference to the local co_varnames[var_num] onto the stack.
     

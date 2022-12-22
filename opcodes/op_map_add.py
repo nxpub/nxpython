@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMapAdd(BaseOpCode):
+class OpMapAdd(OpCode):
     """
     Calls dict.__setitem__(TOS1[-i], TOS1, TOS).  Used to implement dict
     comprehensions.

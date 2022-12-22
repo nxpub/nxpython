@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadAttr(BaseOpCode):
+class OpLoadAttr(OpCode):
     """
     If the low bit of namei is not set, this replaces TOS with
     getattr(TOS, co_names[namei>>1]).

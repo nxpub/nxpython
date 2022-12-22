@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCheckEgMatch(BaseOpCode):
+class OpCheckEgMatch(OpCode):
     """
     Performs exception matching for except*. Applies split(TOS) on
     the exception group representing TOS1.

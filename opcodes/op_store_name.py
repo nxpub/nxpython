@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStoreName(BaseOpCode):
+class OpStoreName(OpCode):
     """
     Implements name = TOS. namei is the index of name in the attribute
     co_names of the code object. The compiler tries to use

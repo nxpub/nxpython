@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpReturnValue(BaseOpCode):
+class OpReturnValue(OpCode):
     """
     Returns with TOS to the caller of the function.
 

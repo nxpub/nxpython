@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCallFunctionEx(BaseOpCode):
+class OpCallFunctionEx(OpCode):
     """
     Calls a callable object with variable set of positional and keyword
     arguments.  If the lowest bit of flags is set, the top of the stack

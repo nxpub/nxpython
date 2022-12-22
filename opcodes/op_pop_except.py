@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPopExcept(BaseOpCode):
+class OpPopExcept(OpCode):
     """
     Pops a value from the stack, which is used to restore the exception state.
     

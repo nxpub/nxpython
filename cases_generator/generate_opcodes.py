@@ -63,9 +63,9 @@ class DSLAnalyzer(Analyzer):
         cls_title = ''.join(map(lambda p: p[0].title() + p[1:], filter(None, thing.name.lower().split('_'))))
         class_name = f'Op{cls_title}'
         fp.write(f'# Auto-generated via https://github.com/python/cpython/blob/{self._cpython_sha}/Python/bytecodes.c')
-        fp.write('\n\n')
-        fp.write(f'from .base import BaseOpCode\n\n\n')
-        fp.write(f'class {class_name}(BaseOpCode):\n')
+        fp.write('\n')
+        fp.write(f'from .base import OpCode\n\n\n')
+        fp.write(f'class {class_name}(OpCode):\n')
         fp.write(f'    """\n')
         if thing_doc := self._docs.get(thing.name):
             for line in thing_doc.splitlines():

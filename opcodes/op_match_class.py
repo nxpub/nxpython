@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMatchClass(BaseOpCode):
+class OpMatchClass(OpCode):
     """
     TOS is a tuple of keyword attribute names, TOS1 is the class being matched
     against, and TOS2 is the match subject.  count is the number of positional

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpGetYieldFromIter(BaseOpCode):
+class OpGetYieldFromIter(OpCode):
     """
     If TOS is a generator iterator or coroutine object
     it is left as is.  Otherwise, implements TOS = iter(TOS).

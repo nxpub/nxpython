@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPrepReraiseStar(BaseOpCode):
+class OpPrepReraiseStar(OpCode):
     """
     Combines the raised and reraised exceptions list from TOS, into an exception
     group to propagate from a try-except* block. Uses the original exception

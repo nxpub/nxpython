@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpLoadClosure(BaseOpCode):
+class OpLoadClosure(OpCode):
     """
     Pushes a reference to the cell contained in slot i of the “fast locals”
     storage.  The name of the variable is co_fastlocalnames[i].

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpGetAwaitable(BaseOpCode):
+class OpGetAwaitable(OpCode):
     """
     Implements TOS = get_awaitable(TOS), where get_awaitable(o)
     returns o if o is a coroutine object or a generator object with

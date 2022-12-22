@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCall(BaseOpCode):
+class OpCall(OpCode):
     """
     Calls a callable object with the number of arguments specified by argc,
     including the named arguments specified by the preceding

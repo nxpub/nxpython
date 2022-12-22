@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpFormatValue(BaseOpCode):
+class OpFormatValue(OpCode):
     """
     Used for implementing formatted literal strings (f-strings).  Pops
     an optional fmt_spec from the stack, then a required value.

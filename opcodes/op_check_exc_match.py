@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpCheckExcMatch(BaseOpCode):
+class OpCheckExcMatch(OpCode):
     """
     Performs exception matching for except. Tests whether the TOS1 is an exception
     matching TOS. Pops TOS and pushes the boolean result of the test.

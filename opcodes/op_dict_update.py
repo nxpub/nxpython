@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpDictUpdate(BaseOpCode):
+class OpDictUpdate(OpCode):
     """
     Calls dict.update(TOS1[-i], TOS).  Used to build dicts.
     

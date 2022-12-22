@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStoreAttr(BaseOpCode):
+class OpStoreAttr(OpCode):
     """
     Implements TOS.name = TOS1, where namei is the index of name in
     co_names.

@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpMatchKeys(BaseOpCode):
+class OpMatchKeys(OpCode):
     """
     TOS is a tuple of mapping keys, and TOS1 is the match subject.  If TOS1
     contains all of the keys in TOS, push a tuple containing the

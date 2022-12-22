@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpSetupAnnotations(BaseOpCode):
+class OpSetupAnnotations(OpCode):
     """
     Checks whether __annotations__ is defined in locals(), if not it is
     set up to an empty dict. This opcode is only emitted if a class

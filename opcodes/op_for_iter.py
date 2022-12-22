@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpForIter(BaseOpCode):
+class OpForIter(OpCode):
     """
     TOS is an iterator.  Call its __next__() method.  If
     this yields a new value, push it on the stack (leaving the iterator below

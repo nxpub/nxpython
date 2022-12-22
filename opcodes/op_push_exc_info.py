@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpPushExcInfo(BaseOpCode):
+class OpPushExcInfo(OpCode):
     """
     Pops a value from the stack. Pushes the current exception to the top of the stack.
     Pushes the value originally popped back to the stack.

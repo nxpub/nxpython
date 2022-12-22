@@ -1,9 +1,8 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
+from .base import OpCode
 
-from .base import BaseOpCode
 
-
-class OpStoreDeref(BaseOpCode):
+class OpStoreDeref(OpCode):
     """
     Stores TOS into the cell contained in slot i of the “fast locals”
     storage.
