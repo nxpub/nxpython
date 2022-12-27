@@ -59,7 +59,7 @@ class DSLAnalyzer(Analyzer):
                 for name, value in RE_OPCODE.findall(opcode_h_file.read())
             }
 
-    def _write_prologue(self, fp, thing):
+    def _write_prologue(self, fp, thing) -> str:
         cls_title = ''.join(map(lambda p: p[0].title() + p[1:], filter(None, thing.name.lower().split('_'))))
         class_name = f'Op{cls_title}'
         fp.write(f'# Auto-generated via https://github.com/python/cpython/blob/{self._cpython_sha}/Python/bytecodes.c')
@@ -85,6 +85,7 @@ class DSLAnalyzer(Analyzer):
         else:
             args = 'self'
         fp.write(f'    def transform({args}) -> None:')
+        return class_name
 
     @staticmethod
     def _write_epilogue(fp):
@@ -109,13 +110,15 @@ class DSLAnalyzer(Analyzer):
         return macro
 
     def write_instructions(self) -> None:
+        init_lines = []
         n_instrs = n_supers = n_macros = 0
         for thing in self.everything:
             if hasattr(thing, 'kind') and thing.kind == 'op':
                 print('skipped', thing.name)
                 continue
-            with open(os.path.join(self._output_path, self._to_filename(thing.name)), 'w') as opcode_file:
-                self._write_prologue(opcode_file, thing)
+            with open(os.path.join(self._output_path, filename := self._to_filename(thing.name)), 'w') as opcode_file:
+                class_name = self._write_prologue(opcode_file, thing)
+                init_lines.append(f'from .{filename[:-3]} import {class_name}')
                 self.out = PyFormatter(opcode_file, 8)
                 match thing:
                     case parser.InstDef():
@@ -131,6 +134,8 @@ class DSLAnalyzer(Analyzer):
                     case _:
                         typing.assert_never(thing)
                 self._write_epilogue(opcode_file)
+        with open(os.path.join(self._output_path, '__init__.py'), 'w') as init_file:
+            init_file.write('\n'.join(init_lines + ['']))
         print(
             f'Wrote {n_instrs} instructions, {n_supers} supers, '
             f'and {n_macros} macros to {self.output_filename}',
@@ -158,8 +163,8 @@ def _make_parser() -> argparse.ArgumentParser:
     return arg_parser
 
 
-def main():
-    args = _make_parser().parse_args()
+def main(args: list[str] = None):
+    args = _make_parser().parse_args(args or sys.argv[1:])
     analyzer = DSLAnalyzer(
         dsl_path=args.input, output_path=args.output, opcode_h_path=args.opcodes, cpython_sha=args.commit,
     )
@@ -171,4 +176,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main([
+        '-i', '../build/cpython/Python/bytecodes.c',
+        '-o', '../opcodes/',
+        '--opcodes', '../build/cpython/Include/opcode.h'
+    ])

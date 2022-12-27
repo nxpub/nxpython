@@ -22,8 +22,7 @@ class OpBinarySubscrListInt(OpCode):
         #     DEOPT_IF(!PyList_CheckExact(list), BINARY_SUBSCR);
 
         #     // Deopt unless 0 <= sub < PyList_Size(list)
-        #     Py_ssize_t signed_magnitude = Py_SIZE(sub);
-        #     DEOPT_IF(((size_t)signed_magnitude) > 1, BINARY_SUBSCR);
+        #     DEOPT_IF(!_PyLong_IsPositiveSingleDigit(sub), BINARY_SUBSCR);
         #     assert(((PyLongObject *)_PyLong_GetZero())->ob_digit[0] == 0);
         #     Py_ssize_t index = ((PyLongObject*)sub)->ob_digit[0];
         #     DEOPT_IF(index >= PyList_GET_SIZE(list), BINARY_SUBSCR);

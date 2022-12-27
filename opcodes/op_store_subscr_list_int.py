@@ -22,7 +22,7 @@ class OpStoreSubscrListInt(OpCode):
         #     DEOPT_IF(!PyList_CheckExact(list), STORE_SUBSCR);
 
         #     // Ensure nonnegative, zero-or-one-digit ints.
-        #     DEOPT_IF(((size_t)Py_SIZE(sub)) > 1, STORE_SUBSCR);
+        #     DEOPT_IF(!_PyLong_IsPositiveSingleDigit(sub), STORE_SUBSCR);
         #     Py_ssize_t index = ((PyLongObject*)sub)->ob_digit[0];
         #     // Ensure index < len(list)
         #     DEOPT_IF(index >= PyList_GET_SIZE(list), STORE_SUBSCR);

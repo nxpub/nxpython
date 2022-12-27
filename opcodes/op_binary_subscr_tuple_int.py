@@ -22,8 +22,7 @@ class OpBinarySubscrTupleInt(OpCode):
         #     DEOPT_IF(!PyTuple_CheckExact(tuple), BINARY_SUBSCR);
 
         #     // Deopt unless 0 <= sub < PyTuple_Size(list)
-        #     Py_ssize_t signed_magnitude = Py_SIZE(sub);
-        #     DEOPT_IF(((size_t)signed_magnitude) > 1, BINARY_SUBSCR);
+        #     DEOPT_IF(!_PyLong_IsPositiveSingleDigit(sub), BINARY_SUBSCR);
         #     assert(((PyLongObject *)_PyLong_GetZero())->ob_digit[0] == 0);
         #     Py_ssize_t index = ((PyLongObject*)sub)->ob_digit[0];
         #     DEOPT_IF(index >= PyTuple_GET_SIZE(tuple), BINARY_SUBSCR);
