@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDeleteAttr(OpCode):
@@ -8,23 +8,21 @@ class OpDeleteAttr(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DELETE_ATTR
     """
-    OPCODE_NAME = 'DELETE_ATTR'
-    OPCODE_VALUE = 96
+    name = 'DELETE_ATTR'
+    value = 96
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, owner) -> None:
-        # TARGET(DELETE_ATTR) {
-        #     PyObject *owner = PEEK(1);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DELETE_ATTR, (owner --)) {
         #     PyObject *name = GETITEM(names, oparg);
         #     int err = PyObject_SetAttr(owner, name, (PyObject *)NULL);
         #     Py_DECREF(owner);
-        #     if (err) goto pop_1_error;
-        #     STACK_SHRINK(1);
-        #     DISPATCH();
+        #     ERROR_IF(err, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        owner = cls.stack.peek(1)
+        name = cls.frame.get_name(oparg)
+        err = cls.api.PyObject_SetAttr(owner, name, None)
+        cls.memory.dec_ref(owner)
+        cls.flow.error_if(err, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

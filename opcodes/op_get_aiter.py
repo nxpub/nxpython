@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpGetAiter(OpCode):
@@ -13,16 +13,12 @@ class OpGetAiter(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-GET_AITER
     """
-    OPCODE_NAME = 'GET_AITER'
-    OPCODE_VALUE = 50
+    name = 'GET_AITER'
+    value = 50
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, obj) -> None:
-        # TARGET(GET_AITER) {
-        #     PyObject *obj = PEEK(1);
-        #     PyObject *iter;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(GET_AITER, (obj -- iter)) {
         #     unaryfunc getter = NULL;
         #     PyTypeObject *type = Py_TYPE(obj);
 
@@ -35,13 +31,13 @@ class OpGetAiter(OpCode):
         #                       "'async for' requires an object with "
         #                       "__aiter__ method, got %.100s",
         #                       type->tp_name);
-        #         Py_DECREF(obj);
-        #         if (true) goto pop_1_error;
+        #         DECREF_INPUTS();
+        #         ERROR_IF(true, error);
         #     }
 
         #     iter = (*getter)(obj);
-        #     Py_DECREF(obj);
-        #     if (iter == NULL) goto pop_1_error;
+        #     DECREF_INPUTS();
+        #     ERROR_IF(iter == NULL, error);
 
         #     if (Py_TYPE(iter)->tp_as_async == NULL ||
         #             Py_TYPE(iter)->tp_as_async->am_anext == NULL) {
@@ -51,12 +47,36 @@ class OpGetAiter(OpCode):
         #                       "that does not implement __anext__: %.100s",
         #                       Py_TYPE(iter)->tp_name);
         #         Py_DECREF(iter);
-        #         if (true) goto pop_1_error;
+        #         ERROR_IF(true, error);
         #     }
-        #     POKE(1, iter);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        obj = cls.stack.peek(1)
+        getter = None
+        type = cls.api.Py_TYPE(obj)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if type.tp_as_async != None:
+            getter = type.tp_as_async.am_aiter
+
+        if getter == None:
+            cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_TypeError,
+                          "'async for' requires an object with "
+                          "__aiter__ method, got %.100s",
+                          type.tp_name)
+            cls.memory.dec_ref(obj)
+            cls.flow.error_if(True, 1)
+
+        iter = (*getter)(obj)
+        cls.memory.dec_ref(obj)
+        cls.flow.error_if(iter == None, 1)
+
+        if cls.api.Py_TYPE(iter:.tp_as_async == None ||
+                cls.api.Py_TYPE(iter).tp_as_async.am_anext == None) {
+
+            cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_TypeError,
+                          "'async for' received an object from __aiter__ "
+                          "that does not implement __anext__: %.100s",
+                          cls.api.Py_TYPE(iter).tp_name)
+            cls.memory.dec_ref(iter)
+            cls.flow.error_if(True, 1)
+        cls.stack.poke(1, iter)
+        cls.flow.dispatch()

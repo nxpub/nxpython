@@ -1,22 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinaryOpMultiplyFloat(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'BINARY_OP_MULTIPLY_FLOAT'
-    OPCODE_VALUE = 13
+    name = 'BINARY_OP_MULTIPLY_FLOAT'
+    value = 13
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, left, right) -> None:
-        # TARGET(BINARY_OP_MULTIPLY_FLOAT) {
-        #     PyObject *right = PEEK(1);
-        #     PyObject *left = PEEK(2);
-        #     PyObject *prod;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_OP_MULTIPLY_FLOAT, (unused/1, left, right -- prod)) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyFloat_CheckExact(left), BINARY_OP);
         #     DEOPT_IF(!PyFloat_CheckExact(right), BINARY_OP);
@@ -26,13 +21,21 @@ class OpBinaryOpMultiplyFloat(OpCode):
         #     prod = PyFloat_FromDouble(dprod);
         #     _Py_DECREF_SPECIALIZED(right, _PyFloat_ExactDealloc);
         #     _Py_DECREF_SPECIALIZED(left, _PyFloat_ExactDealloc);
-        #     if (prod == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, prod);
-        #     JUMPBY(1);
-        #     DISPATCH();
+        #     ERROR_IF(prod == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyFloat_CheckExact(left), 'BINARY_OP')
+        cls.flow.deopt_if(not cls.api.PyFloat_CheckExact(right), 'BINARY_OP')
+        cls.flow.stat_inc('BINARY_OP', 'hit')
+        dprod = (left).ob_fval *
+            (right).ob_fval
+        prod = cls.api.PyFloat_FromDouble(dprod)
+        cls.memory.dec_ref_specialized(right, cls.api.private.PyFloat_ExactDealloc)
+        cls.memory.dec_ref_specialized(left, cls.api.private.PyFloat_ExactDealloc)
+        cls.flow.error_if(prod == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, prod)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

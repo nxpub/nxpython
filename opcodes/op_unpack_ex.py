@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpUnpackEx(OpCode):
@@ -15,14 +15,13 @@ class OpUnpackEx(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-UNPACK_EX
     """
-    OPCODE_NAME = 'UNPACK_EX'
-    OPCODE_VALUE = 94
+    name = 'UNPACK_EX'
+    value = 94
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(UNPACK_EX) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: UNPACK_EX has irregular stack effect
+        # inst(UNPACK_EX) {
         #     int totalargs = 1 + (oparg & 0xFF) + (oparg >> 8);
         #     PyObject *seq = POP();
         #     PyObject **top = stack_pointer + totalargs;
@@ -32,9 +31,13 @@ class OpUnpackEx(OpCode):
         #     }
         #     STACK_GROW(totalargs);
         #     Py_DECREF(seq);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        totalargs = 1 + (oparg & 0xFF) + (oparg >> 8)
+        seq = cls.stack.pop()
+        top = cls.stack + totalargs
+        if not unpack_iterable(cls.frame.state, seq, oparg & 0xFF, oparg >> 8, top):
+            cls.memory.dec_ref(seq)
+            cls.flow.error()
+        cls.stack.grow(totalargs)
+        cls.memory.dec_ref(seq)
+        cls.flow.dispatch()

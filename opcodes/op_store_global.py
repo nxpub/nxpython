@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreGlobal(OpCode):
@@ -8,23 +8,21 @@ class OpStoreGlobal(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STORE_GLOBAL
     """
-    OPCODE_NAME = 'STORE_GLOBAL'
-    OPCODE_VALUE = 97
+    name = 'STORE_GLOBAL'
+    value = 97
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, v) -> None:
-        # TARGET(STORE_GLOBAL) {
-        #     PyObject *v = PEEK(1);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(STORE_GLOBAL, (v --)) {
         #     PyObject *name = GETITEM(names, oparg);
         #     int err = PyDict_SetItem(GLOBALS(), name, v);
         #     Py_DECREF(v);
-        #     if (err) goto pop_1_error;
-        #     STACK_SHRINK(1);
-        #     DISPATCH();
+        #     ERROR_IF(err, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.stack.peek(1)
+        name = cls.frame.get_name(oparg)
+        err = cls.api.PyDict_SetItem(cls.frame.get_globals(), name, v)
+        cls.memory.dec_ref(v)
+        cls.flow.error_if(err, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

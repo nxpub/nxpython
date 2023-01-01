@@ -1,22 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreSubscrListInt(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'STORE_SUBSCR_LIST_INT'
-    OPCODE_VALUE = 167
+    name = 'STORE_SUBSCR_LIST_INT'
+    value = 167
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, value, list, sub) -> None:
-        # TARGET(STORE_SUBSCR_LIST_INT) {
-        #     PyObject *sub = PEEK(1);
-        #     PyObject *list = PEEK(2);
-        #     PyObject *value = PEEK(3);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(STORE_SUBSCR_LIST_INT, (unused/1, value, list, sub -- )) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyLong_CheckExact(sub), STORE_SUBSCR);
         #     DEOPT_IF(!PyList_CheckExact(list), STORE_SUBSCR);
@@ -34,11 +29,27 @@ class OpStoreSubscrListInt(OpCode):
         #     Py_DECREF(old_value);
         #     _Py_DECREF_SPECIALIZED(sub, (destructor)PyObject_Free);
         #     Py_DECREF(list);
-        #     STACK_SHRINK(3);
-        #     JUMPBY(1);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        sub = cls.stack.peek(1)
+        list = cls.stack.peek(2)
+        value = cls.stack.peek(3)
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyLong_CheckExact(sub), 'STORE_SUBSCR')
+        cls.flow.deopt_if(not cls.api.PyList_CheckExact(list), 'STORE_SUBSCR')
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # Ensure nonnegative, zero-or-one-digit ints.
+        cls.flow.deopt_if(not cls.api.private.PyLong_IsPositiveSingleDigit(sub), 'STORE_SUBSCR')
+        index = (sub).ob_digit[0]
+        # Ensure index < len(list)
+        cls.flow.deopt_if(index >= cls.api.PyList_GET_SIZE(list), 'STORE_SUBSCR')
+        cls.flow.stat_inc('STORE_SUBSCR', 'hit')
+
+        old_value = cls.api.PyList_GET_ITEM(list, index)
+        cls.api.PyList_SET_ITEM(list, index, value)
+        # assert(old_value != NULL)
+        cls.memory.dec_ref(old_value)
+        cls.memory.dec_ref_specialized(sub, cls.api.PyObject_Free)
+        cls.memory.dec_ref(list)
+        cls.stack.shrink(3)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

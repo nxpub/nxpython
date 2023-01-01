@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpResume(OpCode):
@@ -20,22 +20,20 @@ class OpResume(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-RESUME
     """
-    OPCODE_NAME = 'RESUME'
-    OPCODE_VALUE = 151
+    name = 'RESUME'
+    value = 151
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(RESUME) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(RESUME, (--)) {
         #     assert(tstate->cframe == &cframe);
         #     assert(frame == cframe.current_frame);
         #     if (_Py_atomic_load_relaxed_int32(eval_breaker) && oparg < 2) {
         #         goto handle_eval_breaker;
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(tstate->cframe == &cframe)
+        # assert(frame == cframe.current_frame)
+        if cls.api.private.Py_atomic_load_relaxed_int32(eval_breaker) and oparg < 2:
+            cls.flow.handle_eval_breaker()
+        cls.flow.dispatch()

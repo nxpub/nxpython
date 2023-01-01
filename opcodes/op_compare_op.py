@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCompareOp(OpCode):
@@ -9,18 +9,12 @@ class OpCompareOp(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-COMPARE_OP
     """
-    OPCODE_NAME = 'COMPARE_OP'
-    OPCODE_VALUE = 107
+    name = 'COMPARE_OP'
+    value = 107
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, left, right) -> None:
-        # TARGET(COMPARE_OP) {
-        #     PREDICTED(COMPARE_OP);
-        #     PyObject *right = PEEK(1);
-        #     PyObject *left = PEEK(2);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(COMPARE_OP, (unused/2, left, right -- res)) {
         #     _PyCompareOpCache *cache = (_PyCompareOpCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -34,13 +28,16 @@ class OpCompareOp(OpCode):
         #     res = PyObject_RichCompare(left, right, oparg);
         #     Py_DECREF(left);
         #     Py_DECREF(right);
-        #     if (res == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, res);
-        #     JUMPBY(2);
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        # assert(oparg <= Py_GE)
+        res = cls.api.PyObject_RichCompare(left, right, oparg)
+        cls.memory.dec_ref(left)
+        cls.memory.dec_ref(right)
+        cls.flow.error_if(res == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.cache_offset(2)
+        cls.flow.dispatch()

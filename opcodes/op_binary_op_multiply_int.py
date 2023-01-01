@@ -1,22 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinaryOpMultiplyInt(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'BINARY_OP_MULTIPLY_INT'
-    OPCODE_VALUE = 14
+    name = 'BINARY_OP_MULTIPLY_INT'
+    value = 14
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, left, right) -> None:
-        # TARGET(BINARY_OP_MULTIPLY_INT) {
-        #     PyObject *right = PEEK(1);
-        #     PyObject *left = PEEK(2);
-        #     PyObject *prod;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_OP_MULTIPLY_INT, (unused/1, left, right -- prod)) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyLong_CheckExact(left), BINARY_OP);
         #     DEOPT_IF(!PyLong_CheckExact(right), BINARY_OP);
@@ -24,13 +19,19 @@ class OpBinaryOpMultiplyInt(OpCode):
         #     prod = _PyLong_Multiply((PyLongObject *)left, (PyLongObject *)right);
         #     _Py_DECREF_SPECIALIZED(right, (destructor)PyObject_Free);
         #     _Py_DECREF_SPECIALIZED(left, (destructor)PyObject_Free);
-        #     if (prod == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, prod);
-        #     JUMPBY(1);
-        #     DISPATCH();
+        #     ERROR_IF(prod == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyLong_CheckExact(left), 'BINARY_OP')
+        cls.flow.deopt_if(not cls.api.PyLong_CheckExact(right), 'BINARY_OP')
+        cls.flow.stat_inc('BINARY_OP', 'hit')
+        prod = cls.api.private.PyLong_Multiply(left, right)
+        cls.memory.dec_ref_specialized(right, cls.api.PyObject_Free)
+        cls.memory.dec_ref_specialized(left, cls.api.PyObject_Free)
+        cls.flow.error_if(prod == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, prod)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

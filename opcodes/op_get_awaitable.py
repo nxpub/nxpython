@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpGetAwaitable(OpCode):
@@ -22,23 +22,19 @@ class OpGetAwaitable(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-GET_AWAITABLE
     """
-    OPCODE_NAME = 'GET_AWAITABLE'
-    OPCODE_VALUE = 131
+    name = 'GET_AWAITABLE'
+    value = 131
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(GET_AWAITABLE) {
-        #     PREDICTED(GET_AWAITABLE);
-        #     PyObject *iterable = TOP();
-        #     PyObject *iter = _PyCoro_GetAwaitableIter(iterable);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(GET_AWAITABLE, (iterable -- iter)) {
+        #     iter = _PyCoro_GetAwaitableIter(iterable);
 
         #     if (iter == NULL) {
         #         format_awaitable_error(tstate, Py_TYPE(iterable), oparg);
         #     }
 
-        #     Py_DECREF(iterable);
+        #     DECREF_INPUTS();
 
         #     if (iter != NULL && PyCoro_CheckExact(iter)) {
         #         PyObject *yf = _PyGen_yf((PyGenObject*)iter);
@@ -54,16 +50,31 @@ class OpGetAwaitable(OpCode):
         #         }
         #     }
 
-        #     SET_TOP(iter); /* Even if it's NULL */
-
-        #     if (iter == NULL) {
-        #         goto error;
-        #     }
+        #     ERROR_IF(iter == NULL, error);
 
         #     PREDICT(LOAD_CONST);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        iterable = cls.stack.peek(1)
+        iter = cls.api.private.PyCoro_GetAwaitableIter(iterable)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if iter == None:
+            format_awaitable_error(cls.frame.state, cls.api.Py_TYPE(iterable), oparg)
+
+        cls.memory.dec_ref(iterable)
+
+        if iter != None and cls.api.PyCoro_CheckExact(iter):
+            yf = cls.api.private.PyGen_yf(iter)
+            if yf != None:
+                # `iter` is a coroutine object that is being
+        #            awaited, `yf` is a pointer to the current awaitable
+        #            being awaited on. 
+                cls.memory.dec_ref(yf)
+                cls.api.Py_CLEAR(iter)
+                cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_RuntimeError,
+                                 "coroutine is being awaited already")
+                # The code below jumps to `error` if `iter` is NULL. 
+
+        cls.flow.error_if(iter == None, 1)
+
+        cls.stack.poke(1, iter)
+        cls.flow.dispatch()

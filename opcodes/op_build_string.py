@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildString(OpCode):
@@ -11,14 +11,13 @@ class OpBuildString(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_STRING
     """
-    OPCODE_NAME = 'BUILD_STRING'
-    OPCODE_VALUE = 157
+    name = 'BUILD_STRING'
+    value = 157
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_STRING) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg] -- __0)
+        # inst(BUILD_STRING) {
         #     PyObject *str;
         #     str = _PyUnicode_JoinArray(&_Py_STR(empty),
         #                                stack_pointer - oparg, oparg);
@@ -29,9 +28,13 @@ class OpBuildString(OpCode):
         #         Py_DECREF(item);
         #     }
         #     PUSH(str);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        str = cls.api.private.PyUnicode_JoinArray(cls.api.private.Py_STR(empty),
+                                   cls.stack - oparg, oparg)
+        if str == None:
+            cls.flow.error()
+        for oparg in range(oparg - 1, -1, -1):
+            item = cls.stack.pop()
+            cls.memory.dec_ref(item)
+        cls.stack.push(str)
+        cls.flow.dispatch()

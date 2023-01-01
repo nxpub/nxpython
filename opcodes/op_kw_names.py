@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpKwNames(OpCode):
@@ -12,20 +12,18 @@ class OpKwNames(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-KW_NAMES
     """
-    OPCODE_NAME = 'KW_NAMES'
-    OPCODE_VALUE = 172
+    name = 'KW_NAMES'
+    value = 172
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(KW_NAMES) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: ( -- )
+        # inst(KW_NAMES) {
         #     assert(kwnames == NULL);
         #     assert(oparg < PyTuple_GET_SIZE(consts));
         #     kwnames = GETITEM(consts, oparg);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(kwnames == NULL)
+        # assert(oparg < PyTuple_GET_SIZE(consts))
+        kwnames = cls.frame.get_const(oparg)
+        cls.flow.dispatch()

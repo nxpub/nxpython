@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallNoKwIsinstance(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_NO_KW_ISINSTANCE'
-    OPCODE_VALUE = 40
+    name = 'CALL_NO_KW_ISINSTANCE'
+    value = 40
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_NO_KW_ISINSTANCE) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_NO_KW_ISINSTANCE) {
         #     assert(cframe.use_tracing == 0);
         #     assert(kwnames == NULL);
         #     /* isinstance(o, o2) */
@@ -43,9 +42,32 @@ class OpCallNoKwIsinstance(OpCode):
         #         goto error;
         #     }
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        # assert(kwnames == NULL)
+        # isinstance(o, o2) 
+        is_meth = is_method(cls.stack, oparg)
+        total_args = oparg + is_meth
+        callable = cls.stack.peek(total_args + 1)
+        cls.flow.deopt_if(total_args != 2, 'CALL')
+        interp = cls.api.private.PyInterpreterState_GET()
+        cls.flow.deopt_if(callable != interp.callable_cache.isinstance, 'CALL')
+        cls.flow.stat_inc('CALL', 'hit')
+        cls = cls.stack.pop()
+        inst = cls.stack.top()
+        retval = cls.api.PyObject_IsInstance(inst, cls)
+        if retval < 0:
+            cls.memory.dec_ref(cls)
+            cls.flow.error()
+        res = cls.api.PyBool_FromLong(retval)
+        # assert((res != NULL) ^ (_PyErr_Occurred(tstate) != NULL))
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.stack.shrink(2-is_meth)
+        cls.stack.set_top(res)
+        cls.memory.dec_ref(inst)
+        cls.memory.dec_ref(cls)
+        cls.memory.dec_ref(callable)
+        if res == None:
+            cls.flow.error()
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_CALL)
+        cls.flow.dispatch()

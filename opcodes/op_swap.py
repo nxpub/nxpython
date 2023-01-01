@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpSwap(OpCode):
@@ -10,21 +10,20 @@ class OpSwap(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-SWAP
     """
-    OPCODE_NAME = 'SWAP'
-    OPCODE_VALUE = 99
+    name = 'SWAP'
+    value = 99
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(SWAP) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: ( -- )
+        # inst(SWAP) {
         #     assert(oparg != 0);
         #     PyObject *top = TOP();
         #     SET_TOP(PEEK(oparg));
         #     PEEK(oparg) = top;
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(oparg != 0)
+        top = cls.stack.top()
+        cls.stack.set_top(cls.stack.peek(oparg))
+        cls.stack.peek(oparg) = top
+        cls.flow.dispatch()

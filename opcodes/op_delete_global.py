@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDeleteGlobal(OpCode):
@@ -8,14 +8,12 @@ class OpDeleteGlobal(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DELETE_GLOBAL
     """
-    OPCODE_NAME = 'DELETE_GLOBAL'
-    OPCODE_VALUE = 98
+    name = 'DELETE_GLOBAL'
+    value = 98
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(DELETE_GLOBAL) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DELETE_GLOBAL, (--)) {
         #     PyObject *name = GETITEM(names, oparg);
         #     int err;
         #     err = PyDict_DelItem(GLOBALS(), name);
@@ -27,9 +25,13 @@ class OpDeleteGlobal(OpCode):
         #         }
         #         goto error;
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        name = cls.frame.get_name(oparg)
+        err = cls.api.PyDict_DelItem(cls.frame.get_globals(), name)
+        # Can't use ERROR_IF here.
+        if err != 0:
+            if cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_KeyError):
+                format_exc_check_arg(cls.frame.state, cls.api.PyExc_NameError,
+                                     NAME_ERROR_MSG, name)
+            cls.flow.error()
+        cls.flow.dispatch()

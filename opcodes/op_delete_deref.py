@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDeleteDeref(OpCode):
@@ -13,14 +13,12 @@ class OpDeleteDeref(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DELETE_DEREF
     """
-    OPCODE_NAME = 'DELETE_DEREF'
-    OPCODE_VALUE = 139
+    name = 'DELETE_DEREF'
+    value = 139
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(DELETE_DEREF) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DELETE_DEREF, (--)) {
         #     PyObject *cell = GETLOCAL(oparg);
         #     PyObject *oldobj = PyCell_GET(cell);
         #     // Can't use ERROR_IF here.
@@ -31,9 +29,14 @@ class OpDeleteDeref(OpCode):
         #     }
         #     PyCell_SET(cell, NULL);
         #     Py_DECREF(oldobj);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cell = cls.frame.get_local(oparg)
+        oldobj = cls.api.PyCell_GET(cell)
+        # Can't use ERROR_IF here.
+        # Fortunately we don't need its superpower.
+        if oldobj == None:
+            format_exc_unbound(cls.frame.state, frame.f_code, oparg)
+            cls.flow.error()
+        cls.api.PyCell_SET(cell, None)
+        cls.memory.dec_ref(oldobj)
+        cls.flow.dispatch()

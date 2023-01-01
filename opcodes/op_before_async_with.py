@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBeforeAsyncWith(OpCode):
@@ -11,14 +11,13 @@ class OpBeforeAsyncWith(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BEFORE_ASYNC_WITH
     """
-    OPCODE_NAME = 'BEFORE_ASYNC_WITH'
-    OPCODE_VALUE = 52
+    name = 'BEFORE_ASYNC_WITH'
+    value = 52
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BEFORE_ASYNC_WITH) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- __0)
+        # inst(BEFORE_ASYNC_WITH) {
         #     PyObject *mgr = TOP();
         #     PyObject *res;
         #     PyObject *enter = _PyObject_LookupSpecial(mgr, &_Py_ID(__aenter__));
@@ -51,9 +50,31 @@ class OpBeforeAsyncWith(OpCode):
         #         goto error;
         #     PUSH(res);
         #     PREDICT(GET_AWAITABLE);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        mgr = cls.stack.top()
+        enter = cls.api.private.PyObject_LookupSpecial(mgr, cls.api.private.Py_ID('__aenter__'))
+        if enter == None:
+            if not cls.api.private.PyErr_Occurred(cls.frame.state):
+                cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_TypeError,
+                              "'%.200s' object does not support the "
+                              "asynchronous context manager protocol",
+                              cls.api.Py_TYPE(mgr).tp_name)
+            cls.flow.error()
+        exit = cls.api.private.PyObject_LookupSpecial(mgr, cls.api.private.Py_ID('__aexit__'))
+        if exit == None:
+            if not cls.api.private.PyErr_Occurred(cls.frame.state):
+                cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_TypeError,
+                              "'%.200s' object does not support the "
+                              "asynchronous context manager protocol "
+                              "(missed __aexit__ method)",
+                              cls.api.Py_TYPE(mgr).tp_name)
+            cls.memory.dec_ref(enter)
+            cls.flow.error()
+        cls.stack.set_top(exit)
+        cls.memory.dec_ref(mgr)
+        res = cls.api.private.PyObject_CallNoArgs(enter)
+        cls.memory.dec_ref(enter)
+        if res == None:
+            cls.flow.error()
+        cls.stack.push(res)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpImportFrom(OpCode):
@@ -10,24 +10,20 @@ class OpImportFrom(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-IMPORT_FROM
     """
-    OPCODE_NAME = 'IMPORT_FROM'
-    OPCODE_VALUE = 109
+    name = 'IMPORT_FROM'
+    value = 109
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(IMPORT_FROM) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(IMPORT_FROM, (from -- from, res)) {
         #     PyObject *name = GETITEM(names, oparg);
-        #     PyObject *from = TOP();
-        #     PyObject *res;
         #     res = import_from(tstate, from, name);
-        #     PUSH(res);
-        #     if (res == NULL)
-        #         goto error;
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        from = cls.stack.peek(1)
+        name = cls.frame.get_name(oparg)
+        res = import_from(cls.frame.state, from, name)
+        cls.flow.error_if(res == None)
+        cls.stack.grow(1)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

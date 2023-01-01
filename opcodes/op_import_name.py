@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpImportName(OpCode):
@@ -12,27 +12,24 @@ class OpImportName(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-IMPORT_NAME
     """
-    OPCODE_NAME = 'IMPORT_NAME'
-    OPCODE_VALUE = 108
+    name = 'IMPORT_NAME'
+    value = 108
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(IMPORT_NAME) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        #  inst(IMPORT_NAME, (level, fromlist -- res)) {
         #     PyObject *name = GETITEM(names, oparg);
-        #     PyObject *fromlist = POP();
-        #     PyObject *level = TOP();
-        #     PyObject *res;
         #     res = import_name(tstate, frame, name, fromlist, level);
-        #     Py_DECREF(level);
-        #     Py_DECREF(fromlist);
-        #     SET_TOP(res);
-        #     if (res == NULL)
-        #         goto error;
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        fromlist = cls.stack.peek(1)
+        level = cls.stack.peek(2)
+        name = cls.frame.get_name(oparg)
+        res = import_name(cls.frame.state, frame, name, fromlist, level)
+        cls.memory.dec_ref(level)
+        cls.memory.dec_ref(fromlist)
+        cls.flow.error_if(res == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

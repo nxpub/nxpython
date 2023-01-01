@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpReraise(OpCode):
@@ -14,14 +14,13 @@ class OpReraise(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-RERAISE
     """
-    OPCODE_NAME = 'RERAISE'
-    OPCODE_VALUE = 119
+    name = 'RERAISE'
+    value = 119
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(RERAISE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__0 -- )
+        # inst(RERAISE) {
         #     if (oparg) {
         #         PyObject *lasti = PEEK(oparg + 1);
         #         if (PyLong_Check(lasti)) {
@@ -41,7 +40,18 @@ class OpReraise(OpCode):
         #     _PyErr_Restore(tstate, exc, val, tb);
         #     goto exception_unwind;
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if oparg:
+            lasti = cls.stack.peek(oparg + 1)
+            if cls.api.PyLong_Check(lasti):
+                frame.prev_instr = cls.api.private.PyCode_CODE(frame.f_code) + cls.api.PyLong_AsLong(lasti)
+                # assert(!_PyErr_Occurred(tstate))
+            else:
+                # assert(PyLong_Check(lasti))
+                cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_SystemError, "lasti is not an int")
+                cls.flow.error()
+        val = cls.stack.pop()
+        # assert(val && PyExceptionInstance_Check(val))
+        exc = cls.api.Py_NewRef(cls.api.PyExceptionInstance_Class(val))
+        tb = cls.api.PyException_GetTraceback(val)
+        cls.api.private.PyErr_Restore(cls.frame.state, exc, val, tb)
+        cls.flow.exception_unwind()

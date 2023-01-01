@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpUnpackSequenceList(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'UNPACK_SEQUENCE_LIST'
-    OPCODE_VALUE = 168
+    name = 'UNPACK_SEQUENCE_LIST'
+    value = 168
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(UNPACK_SEQUENCE_LIST) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__0 -- __array[oparg])
+        # inst(UNPACK_SEQUENCE_LIST) {
         #     PyObject *seq = TOP();
         #     DEOPT_IF(!PyList_CheckExact(seq), UNPACK_SEQUENCE);
         #     DEOPT_IF(PyList_GET_SIZE(seq) != oparg, UNPACK_SEQUENCE);
@@ -25,9 +24,15 @@ class OpUnpackSequenceList(OpCode):
         #     }
         #     Py_DECREF(seq);
         #     JUMPBY(INLINE_CACHE_ENTRIES_UNPACK_SEQUENCE);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        seq = cls.stack.top()
+        cls.flow.deopt_if(not cls.api.PyList_CheckExact(seq), 'UNPACK_SEQUENCE')
+        cls.flow.deopt_if(cls.api.PyList_GET_SIZE(seq) != oparg, 'UNPACK_SEQUENCE')
+        cls.flow.stat_inc('UNPACK_SEQUENCE', 'hit')
+        cls.stack.shrink(1)
+        items = cls.api.private.PyList_ITEMS(seq)
+        for oparg in range(oparg, 0, -1):
+            cls.stack.push(cls.api.Py_NewRef(items[oparg]))
+        cls.memory.dec_ref(seq)
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_UNPACK_SEQUENCE)
+        cls.flow.dispatch()

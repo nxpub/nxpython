@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinaryOp(OpCode):
@@ -12,19 +12,12 @@ class OpBinaryOp(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BINARY_OP
     """
-    OPCODE_NAME = 'BINARY_OP'
-    OPCODE_VALUE = 122
+    name = 'BINARY_OP'
+    value = 122
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, lhs, rhs) -> None:
-        # TARGET(BINARY_OP) {
-        #     PREDICTED(BINARY_OP);
-        #     static_assert(INLINE_CACHE_ENTRIES_BINARY_OP == 1, "incorrect cache size");
-        #     PyObject *rhs = PEEK(1);
-        #     PyObject *lhs = PEEK(2);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(BINARY_OP, (unused/1, lhs, rhs -- res)) {
         #     _PyBinaryOpCache *cache = (_PyBinaryOpCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -40,13 +33,19 @@ class OpBinaryOp(OpCode):
         #     res = binary_ops[oparg](lhs, rhs);
         #     Py_DECREF(lhs);
         #     Py_DECREF(rhs);
-        #     if (res == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, res);
-        #     JUMPBY(1);
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # static_assert(INLINE_CACHE_ENTRIES_BINARY_OP == 1, "incorrect cache size")
+        rhs = cls.stack.peek(1)
+        lhs = cls.stack.peek(2)
+        # assert(0 <= oparg)
+        # assert((unsigned)oparg < Py_ARRAY_LENGTH(binary_ops))
+        # assert(binary_ops[oparg])
+        res = cls.api.internal.binary_ops[oparg](lhs, rhs)
+        cls.memory.dec_ref(lhs)
+        cls.memory.dec_ref(rhs)
+        cls.flow.error_if(res == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

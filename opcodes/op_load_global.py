@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadGlobal(OpCode):
@@ -11,15 +11,13 @@ class OpLoadGlobal(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_GLOBAL
     """
-    OPCODE_NAME = 'LOAD_GLOBAL'
-    OPCODE_VALUE = 116
+    name = 'LOAD_GLOBAL'
+    value = 116
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_GLOBAL) {
-        #     PREDICTED(LOAD_GLOBAL);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: LOAD_GLOBAL has irregular stack effect
+        # inst(LOAD_GLOBAL) {
         #     _PyLoadGlobalCache *cache = (_PyLoadGlobalCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -78,9 +76,44 @@ class OpLoadGlobal(OpCode):
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_GLOBAL);
         #     STACK_GROW(push_null);
         #     PUSH(v);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        push_null = oparg & 1
+        cls.stack.peek(0) = None
+        name = cls.frame.get_name(oparg>>1)
+        if cls.api.PyDict_CheckExact(cls.frame.get_globals():
+            and cls.api.PyDict_CheckExact(cls.frame.get_builtins()))
+        {
+            v = cls.api.private.PyDict_LoadGlobal(cls.frame.get_globals(),
+                                   cls.frame.get_builtins(),
+                                   name)
+            if v == None:
+                if not cls.api.private.PyErr_Occurred(cls.frame.state):
+                    # _PyDict_LoadGlobal() returns NULL without raising
+        #              * an exception if the key doesn't exist 
+                    format_exc_check_arg(cls.frame.state, cls.api.PyExc_NameError,
+                                         NAME_ERROR_MSG, name)
+                cls.flow.error()
+            cls.memory.inc_ref(v)
+        else:
+            # Slow-path if globals or builtins is not a dict 
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+            # namespace 1: globals 
+            v = cls.api.PyObject_GetItem(cls.frame.get_globals(), name)
+            if v == None:
+                if not cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_KeyError):
+                    cls.flow.error()
+                cls.api.private.PyErr_Clear(cls.frame.state)
+
+                # namespace 2: builtins 
+                v = cls.api.PyObject_GetItem(cls.frame.get_builtins(), name)
+                if v == None:
+                    if cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_KeyError):
+                        format_exc_check_arg(
+                                    cls.frame.state, cls.api.PyExc_NameError,
+                                    NAME_ERROR_MSG, name)
+                    cls.flow.error()
+        # Skip over inline cache 
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_LOAD_GLOBAL)
+        cls.stack.grow(push_null)
+        cls.stack.push(v)
+        cls.flow.dispatch()

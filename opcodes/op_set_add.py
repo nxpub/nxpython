@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpSetAdd(OpCode):
@@ -8,24 +8,23 @@ class OpSetAdd(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-SET_ADD
     """
-    OPCODE_NAME = 'SET_ADD'
-    OPCODE_VALUE = 146
+    name = 'SET_ADD'
+    value = 146
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, v) -> None:
-        # TARGET(SET_ADD) {
-        #     PyObject *v = PEEK(1);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // Alternative: (set, unused[oparg], v -- set, unused[oparg])
+        # inst(SET_ADD, (v --)) {
         #     PyObject *set = PEEK(oparg + 1);  // +1 to account for v staying on stack
         #     int err = PySet_Add(set, v);
         #     Py_DECREF(v);
-        #     if (err) goto pop_1_error;
-        #     STACK_SHRINK(1);
+        #     ERROR_IF(err, error);
         #     PREDICT(JUMP_BACKWARD);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.stack.peek(1)
+        set = cls.stack.peek(oparg + 1)  # +1 to account for v staying on stack
+        err = cls.api.PySet_Add(set, v)
+        cls.memory.dec_ref(v)
+        cls.flow.error_if(err, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

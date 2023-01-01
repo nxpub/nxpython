@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpMapAdd(OpCode):
@@ -13,28 +13,25 @@ class OpMapAdd(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-MAP_ADD
     """
-    OPCODE_NAME = 'MAP_ADD'
-    OPCODE_VALUE = 147
+    name = 'MAP_ADD'
+    value = 147
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(MAP_ADD) {
-        #     PyObject *value = TOP();
-        #     PyObject *key = SECOND();
-        #     PyObject *map;
-        #     STACK_SHRINK(2);
-        #     map = PEEK(oparg);                      /* dict */
-        #     assert(PyDict_CheckExact(map));
-        #     /* map[key] = value */
-        #     if (_PyDict_SetItem_Take2((PyDictObject *)map, key, value) != 0) {
-        #         goto error;
-        #     }
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(MAP_ADD, (key, value --)) {
+        #     PyObject *dict = PEEK(oparg + 2);  // key, value are still on the stack
+        #     assert(PyDict_CheckExact(dict));
+        #     /* dict[key] = value */
+        #     // Do not DECREF INPUTS because the function steals the references
+        #     ERROR_IF(_PyDict_SetItem_Take2((PyDictObject *)dict, key, value) != 0, error);
         #     PREDICT(JUMP_BACKWARD);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.peek(1)
+        key = cls.stack.peek(2)
+        dict = cls.stack.peek(oparg + 2)  # key, value are still on the stack
+        # assert(PyDict_CheckExact(dict))
+        # dict[key] = value 
+        # Do not DECREF INPUTS because the function steals the references
+        cls.flow.error_if(cls.api.private.PyDict_SetItem_Take2(dict, key, value) != 0, 2)
+        cls.stack.shrink(2)
+        cls.flow.dispatch()

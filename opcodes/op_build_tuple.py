@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildTuple(OpCode):
@@ -9,22 +9,22 @@ class OpBuildTuple(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_TUPLE
     """
-    OPCODE_NAME = 'BUILD_TUPLE'
-    OPCODE_VALUE = 102
+    name = 'BUILD_TUPLE'
+    value = 102
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_TUPLE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg] -- __0)
+        # inst(BUILD_TUPLE) {
         #     STACK_SHRINK(oparg);
         #     PyObject *tup = _PyTuple_FromArraySteal(stack_pointer, oparg);
         #     if (tup == NULL)
         #         goto error;
         #     PUSH(tup);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.stack.shrink(oparg)
+        tup = cls.api.private.PyTuple_FromArraySteal(cls.stack, oparg)
+        if tup == None:
+            cls.flow.error()
+        cls.stack.push(tup)
+        cls.flow.dispatch()

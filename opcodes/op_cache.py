@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCache(OpCode):
@@ -21,17 +21,13 @@ class OpCache(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-CACHE
     """
-    OPCODE_NAME = 'CACHE'
-    OPCODE_VALUE = 0
+    name = 'CACHE'
+    value = 0
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CACHE) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- )
+        # inst(CACHE) {
         #     Py_UNREACHABLE();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
         raise NotImplementedError

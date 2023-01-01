@@ -1,22 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinarySubscrListInt(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'BINARY_SUBSCR_LIST_INT'
-    OPCODE_VALUE = 20
+    name = 'BINARY_SUBSCR_LIST_INT'
+    value = 20
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, list, sub) -> None:
-        # TARGET(BINARY_SUBSCR_LIST_INT) {
-        #     PyObject *sub = PEEK(1);
-        #     PyObject *list = PEEK(2);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_SUBSCR_LIST_INT, (unused/4, list, sub -- res)) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyLong_CheckExact(sub), BINARY_SUBSCR);
         #     DEOPT_IF(!PyList_CheckExact(list), BINARY_SUBSCR);
@@ -32,12 +27,25 @@ class OpBinarySubscrListInt(OpCode):
         #     Py_INCREF(res);
         #     _Py_DECREF_SPECIALIZED(sub, (destructor)PyObject_Free);
         #     Py_DECREF(list);
-        #     STACK_SHRINK(1);
-        #     POKE(1, res);
-        #     JUMPBY(4);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        sub = cls.stack.peek(1)
+        list = cls.stack.peek(2)
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyLong_CheckExact(sub), 'BINARY_SUBSCR')
+        cls.flow.deopt_if(not cls.api.PyList_CheckExact(list), 'BINARY_SUBSCR')
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # Deopt unless 0 <= sub < cls.api.PyList_Size(list)
+        cls.flow.deopt_if(not cls.api.private.PyLong_IsPositiveSingleDigit(sub), 'BINARY_SUBSCR')
+        # assert(((PyLongObject *)_PyLong_GetZero())->ob_digit[0] == 0)
+        index = (sub).ob_digit[0]
+        cls.flow.deopt_if(index >= cls.api.PyList_GET_SIZE(list), 'BINARY_SUBSCR')
+        cls.flow.stat_inc('BINARY_SUBSCR', 'hit')
+        res = cls.api.PyList_GET_ITEM(list, index)
+        # assert(res != NULL)
+        cls.memory.inc_ref(res)
+        cls.memory.dec_ref_specialized(sub, cls.api.PyObject_Free)
+        cls.memory.dec_ref(list)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.cache_offset(4)
+        cls.flow.dispatch()

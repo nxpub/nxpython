@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpJumpIfFalseOrPop(OpCode):
@@ -13,14 +13,13 @@ class OpJumpIfFalseOrPop(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-JUMP_IF_FALSE_OR_POP
     """
-    OPCODE_NAME = 'JUMP_IF_FALSE_OR_POP'
-    OPCODE_VALUE = 111
+    name = 'JUMP_IF_FALSE_OR_POP'
+    value = 111
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(JUMP_IF_FALSE_OR_POP) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: JUMP_IF_FALSE_OR_POP stack effect depends on jump flag
+        # inst(JUMP_IF_FALSE_OR_POP) {
         #     PyObject *cond = TOP();
         #     int err;
         #     if (Py_IsTrue(cond)) {
@@ -43,9 +42,20 @@ class OpJumpIfFalseOrPop(OpCode):
         #             goto error;
         #         }
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cond = cls.stack.top()
+        if cls.api.Py_IsTrue(cond):
+            cls.stack.shrink(1)
+            cls.memory.dec_ref_no_dealloc(cond)
+        elif cls.api.Py_IsFalse(cond):
+            cls.flow.jump_by(oparg)
+        else:
+            err = cls.api.PyObject_IsTrue(cond)
+            if err > 0:
+                cls.stack.shrink(1)
+                cls.memory.dec_ref(cond)
+            elif err == 0:
+                cls.flow.jump_by(oparg)
+            else:
+                cls.flow.error()
+        cls.flow.dispatch()

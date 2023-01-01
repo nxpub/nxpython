@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpGetLen(OpCode):
@@ -10,14 +10,13 @@ class OpGetLen(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-GET_LEN
     """
-    OPCODE_NAME = 'GET_LEN'
-    OPCODE_VALUE = 30
+    name = 'GET_LEN'
+    value = 30
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(GET_LEN) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- __0)
+        # inst(GET_LEN) {
         #     // PUSH(len(TOS))
         #     Py_ssize_t len_i = PyObject_Length(TOP());
         #     if (len_i < 0) {
@@ -28,9 +27,13 @@ class OpGetLen(OpCode):
         #         goto error;
         #     }
         #     PUSH(len_o);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # cls.stack.push(len(TOS))
+        len_i = cls.api.PyObject_Length(cls.stack.top())
+        if len_i < 0:
+            cls.flow.error()
+        len_o = cls.api.PyLong_FromSsize_t(len_i)
+        if len_o == None:
+            cls.flow.error()
+        cls.stack.push(len_o)
+        cls.flow.dispatch()

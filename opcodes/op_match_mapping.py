@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpMatchMapping(OpCode):
@@ -13,22 +13,21 @@ class OpMatchMapping(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-MATCH_MAPPING
     """
-    OPCODE_NAME = 'MATCH_MAPPING'
-    OPCODE_VALUE = 31
+    name = 'MATCH_MAPPING'
+    value = 31
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(MATCH_MAPPING) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- __0)
+        # inst(MATCH_MAPPING) {
         #     PyObject *subject = TOP();
         #     int match = Py_TYPE(subject)->tp_flags & Py_TPFLAGS_MAPPING;
         #     PyObject *res = match ? Py_True : Py_False;
         #     PUSH(Py_NewRef(res));
         #     PREDICT(POP_JUMP_IF_FALSE);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        subject = cls.stack.top()
+        match = cls.api.Py_TYPE(subject).tp_flags & cls.api.Py_TPFLAGS_MAPPING
+        res = match ? cls.api.Py_True : cls.api.Py_False
+        cls.stack.push(cls.api.Py_NewRef(res))
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCopy(OpCode):
@@ -11,20 +11,18 @@ class OpCopy(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-COPY
     """
-    OPCODE_NAME = 'COPY'
-    OPCODE_VALUE = 120
+    name = 'COPY'
+    value = 120
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(COPY) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: ( -- __0)
+        # inst(COPY) {
         #     assert(oparg != 0);
         #     PyObject *peek = PEEK(oparg);
         #     PUSH(Py_NewRef(peek));
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(oparg != 0)
+        peek = cls.stack.peek(oparg)
+        cls.stack.push(cls.api.Py_NewRef(peek))
+        cls.flow.dispatch()

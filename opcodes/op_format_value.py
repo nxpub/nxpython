@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpFormatValue(OpCode):
@@ -29,14 +29,13 @@ class OpFormatValue(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-FORMAT_VALUE
     """
-    OPCODE_NAME = 'FORMAT_VALUE'
-    OPCODE_VALUE = 155
+    name = 'FORMAT_VALUE'
+    value = 155
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(FORMAT_VALUE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: FORMAT_VALUE has irregular stack effect
+        # inst(FORMAT_VALUE) {
         #     /* Handles f-string value formatting. */
         #     PyObject *result;
         #     PyObject *fmt_spec;
@@ -93,9 +92,53 @@ class OpFormatValue(OpCode):
         #     }
 
         #     PUSH(result);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # Handles f-string value formatting. 
+        (*conv_fn)()
+        which_conversion = oparg & FVC_MASK
+        have_fmt_spec = (oparg & FVS_MASK) == FVS_HAVE_SPEC
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        fmt_spec = have_fmt_spec ? cls.stack.pop() : None
+        value = cls.stack.pop()
+
+        # See if any conversion is specified. 
+        switch (which_conversion) {
+        case FVC_NONE:  conv_fn = None           break
+        case FVC_STR:   conv_fn = cls.api.PyObject_Str   break
+        case FVC_REPR:  conv_fn = cls.api.PyObject_Repr  break
+        case FVC_ASCII: conv_fn = cls.api.PyObject_ASCII break
+        default:
+            cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_SystemError,
+                          "unexpected conversion flag %d",
+                          which_conversion)
+            cls.flow.error()
+
+        # If there's a conversion function, call it and replace
+        #    value with that result. Otherwise, just use value,
+        #    without conversion. 
+        if conv_fn != None:
+            result = conv_fn(value)
+            cls.memory.dec_ref(value)
+            if result == None:
+                cls.memory.dec_ref_x(fmt_spec)
+                cls.flow.error()
+            value = result
+
+        # If value is a unicode object, and there's no fmt_spec,
+        #    then we know the result of format(value) is value
+        #    itself. In that case, skip calling format(). I plan to
+        #    move this optimization in to PyObject_Format()
+        #    itself. 
+        if cls.api.PyUnicode_CheckExact(value) and fmt_spec == None:
+            # Do nothing, just transfer ownership to result. 
+            result = value
+        else:
+            # Actually call format(). 
+            result = cls.api.PyObject_Format(value, fmt_spec)
+            cls.memory.dec_ref(value)
+            cls.memory.dec_ref_x(fmt_spec)
+            if result == None:
+                cls.flow.error()
+
+        cls.stack.push(result)
+        cls.flow.dispatch()

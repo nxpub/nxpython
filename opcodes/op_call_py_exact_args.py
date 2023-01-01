@@ -1,20 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallPyExactArgs(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_PY_EXACT_ARGS'
-    OPCODE_VALUE = 22
+    name = 'CALL_PY_EXACT_ARGS'
+    value = 22
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_PY_EXACT_ARGS) {
-        #     PREDICTED(CALL_PY_EXACT_ARGS);
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_PY_EXACT_ARGS) {
         #     assert(kwnames == NULL);
         #     DEOPT_IF(tstate->interp->eval_frame, CALL);
         #     _PyCallCache *cache = (_PyCallCache *)next_instr;
@@ -40,7 +38,5 @@ class OpCallPyExactArgs(OpCode):
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL);
         #     DISPATCH_INLINED(new_frame);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(kwnames == NULL)
+        cls.flow.deopt_if(cls.frame.state.interp.eval_frame, 'CALL')

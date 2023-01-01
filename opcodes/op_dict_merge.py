@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDictMerge(OpCode):
@@ -10,27 +10,29 @@ class OpDictMerge(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DICT_MERGE
     """
-    OPCODE_NAME = 'DICT_MERGE'
-    OPCODE_VALUE = 164
+    name = 'DICT_MERGE'
+    value = 164
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(DICT_MERGE) {
-        #     PyObject *update = POP();
-        #     PyObject *dict = PEEK(oparg);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DICT_MERGE, (update --)) {
+        #     PyObject *dict = PEEK(oparg + 1);  // update is still on the stack
 
         #     if (_PyDict_MergeEx(dict, update, 2) < 0) {
-        #         format_kwargs_error(tstate, PEEK(2 + oparg), update);
-        #         Py_DECREF(update);
-        #         goto error;
+        #         format_kwargs_error(tstate, PEEK(3 + oparg), update);
+        #         DECREF_INPUTS();
+        #         ERROR_IF(true, error);
         #     }
-        #     Py_DECREF(update);
+        #     DECREF_INPUTS();
         #     PREDICT(CALL_FUNCTION_EX);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        update = cls.stack.peek(1)
+        dict = cls.stack.peek(oparg + 1)  # update is still on the stack
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if cls.api.private.PyDict_MergeEx(dict, update, 2) < 0:
+            format_kwargs_error(cls.frame.state, cls.stack.peek(3 + oparg), update)
+            cls.memory.dec_ref(update)
+            cls.flow.error_if(True, 1)
+        cls.memory.dec_ref(update)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

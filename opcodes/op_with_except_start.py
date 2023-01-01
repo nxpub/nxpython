@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpWithExceptStart(OpCode):
@@ -16,18 +16,12 @@ class OpWithExceptStart(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-WITH_EXCEPT_START
     """
-    OPCODE_NAME = 'WITH_EXCEPT_START'
-    OPCODE_VALUE = 49
+    name = 'WITH_EXCEPT_START'
+    value = 49
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, exit_func, lasti, unused, val) -> None:
-        # TARGET(WITH_EXCEPT_START) {
-        #     PyObject *val = PEEK(1);
-        #     PyObject *lasti = PEEK(3);
-        #     PyObject *exit_func = PEEK(4);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(WITH_EXCEPT_START, (exit_func, lasti, unused, val -- exit_func, lasti, unused, val, res)) {
         #     /* At the top of the stack are 4 values:
         #        - val: TOP = exc_info()
         #        - unused: SECOND = previous exception
@@ -47,12 +41,31 @@ class OpWithExceptStart(OpCode):
         #     PyObject *stack[4] = {NULL, exc, val, tb};
         #     res = PyObject_Vectorcall(exit_func, stack + 1,
         #             3 | PY_VECTORCALL_ARGUMENTS_OFFSET, NULL);
-        #     if (res == NULL) goto error;
-        #     STACK_GROW(1);
-        #     POKE(1, res);
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
+        val = cls.stack.peek(1)
+        lasti = cls.stack.peek(3)
+        exit_func = cls.stack.peek(4)
+        # At the top of the stack are 4 values:
+        #    - val: TOP = exc_info()
+        #    - unused: SECOND = previous exception
+        #    - lasti: THIRD = lasti of exception in exc_info()
+        #    - exit_func: FOURTH = the context.__exit__ bound method
+        #    We call FOURTH(type(TOP), TOP, GetTraceback(TOP)).
+        #    Then we push the __exit__ return value.
+        # 
+        exc, *tb
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(val && PyExceptionInstance_Check(val))
+        exc = cls.api.PyExceptionInstance_Class(val)
+        tb = cls.api.PyException_GetTraceback(val)
+        cls.memory.dec_ref_x(tb)
+        # assert(PyLong_Check(lasti))
+        (void)lasti # Shut up compiler warning if asserts are off
+        stack[4] = {None, exc, val, tb}
+        res = cls.api.PyObject_Vectorcall(exit_func, stack + 1,
+                3 | PY_VECTORCALL_ARGUMENTS_OFFSET, None)
+        cls.flow.error_if(res == None)
+        cls.stack.grow(1)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpMakeFunction(OpCode):
@@ -24,14 +24,13 @@ class OpMakeFunction(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-MAKE_FUNCTION
     """
-    OPCODE_NAME = 'MAKE_FUNCTION'
-    OPCODE_VALUE = 132
+    name = 'MAKE_FUNCTION'
+    value = 132
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(MAKE_FUNCTION) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: MAKE_FUNCTION has irregular stack effect
+        # inst(MAKE_FUNCTION) {
         #     PyObject *codeobj = POP();
         #     PyFunctionObject *func = (PyFunctionObject *)
         #         PyFunction_New(codeobj, GLOBALS());
@@ -60,9 +59,28 @@ class OpMakeFunction(OpCode):
 
         #     func->func_version = ((PyCodeObject *)codeobj)->co_version;
         #     PUSH((PyObject *)func);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        codeobj = cls.stack.pop()
+        func = (cls.api.PyFunctionObject *)
+            cls.api.PyFunction_New(codeobj, cls.frame.get_globals())
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.memory.dec_ref(codeobj)
+        if func == None:
+            cls.flow.error()
+
+        if oparg & 0x08:
+            # assert(PyTuple_CheckExact(TOP()))
+            func.func_closure = cls.stack.pop()
+        if oparg & 0x04:
+            # assert(PyTuple_CheckExact(TOP()))
+            func.func_annotations = cls.stack.pop()
+        if oparg & 0x02:
+            # assert(PyDict_CheckExact(TOP()))
+            func.func_kwdefaults = cls.stack.pop()
+        if oparg & 0x01:
+            # assert(PyTuple_CheckExact(TOP()))
+            func.func_defaults = cls.stack.pop()
+
+        func.func_version = (codeobj).co_version
+        cls.stack.push(func)
+        cls.flow.dispatch()

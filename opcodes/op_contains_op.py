@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpContainsOp(OpCode):
@@ -10,27 +10,24 @@ class OpContainsOp(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-CONTAINS_OP
     """
-    OPCODE_NAME = 'CONTAINS_OP'
-    OPCODE_VALUE = 118
+    name = 'CONTAINS_OP'
+    value = 118
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CONTAINS_OP) {
-        #     PyObject *right = POP();
-        #     PyObject *left = POP();
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(CONTAINS_OP, (left, right -- b)) {
         #     int res = PySequence_Contains(right, left);
-        #     Py_DECREF(left);
-        #     Py_DECREF(right);
-        #     if (res < 0) {
-        #         goto error;
-        #     }
-        #     PyObject *b = (res^oparg) ? Py_True : Py_False;
-        #     PUSH(Py_NewRef(b));
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(res < 0, error);
+        #     b = Py_NewRef((res^oparg) ? Py_True : Py_False);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        res = cls.api.PySequence_Contains(right, left)
+        cls.memory.dec_ref(left)
+        cls.memory.dec_ref(right)
+        cls.flow.error_if(res < 0, 2)
+        b = cls.api.Py_NewRef(cls.api.Py_True if res^oparg) else cls.api.Py_False)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, b)
+        cls.flow.dispatch()

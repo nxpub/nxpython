@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinarySubscr(OpCode):
@@ -8,19 +8,12 @@ class OpBinarySubscr(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BINARY_SUBSCR
     """
-    OPCODE_NAME = 'BINARY_SUBSCR'
-    OPCODE_VALUE = 25
+    name = 'BINARY_SUBSCR'
+    value = 25
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, container, sub) -> None:
-        # TARGET(BINARY_SUBSCR) {
-        #     PREDICTED(BINARY_SUBSCR);
-        #     static_assert(INLINE_CACHE_ENTRIES_BINARY_SUBSCR == 4, "incorrect cache size");
-        #     PyObject *sub = PEEK(1);
-        #     PyObject *container = PEEK(2);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_SUBSCR, (unused/4, container, sub -- res)) {
         #     _PyBinarySubscrCache *cache = (_PyBinarySubscrCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -31,15 +24,17 @@ class OpBinarySubscr(OpCode):
         #     STAT_INC(BINARY_SUBSCR, deferred);
         #     DECREMENT_ADAPTIVE_COUNTER(cache->counter);
         #     res = PyObject_GetItem(container, sub);
-        #     Py_DECREF(container);
-        #     Py_DECREF(sub);
-        #     if (res == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, res);
-        #     JUMPBY(4);
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # static_assert(INLINE_CACHE_ENTRIES_BINARY_SUBSCR == 4, "incorrect cache size")
+        sub = cls.stack.peek(1)
+        container = cls.stack.peek(2)
+        res = cls.api.PyObject_GetItem(container, sub)
+        cls.memory.dec_ref(container)
+        cls.memory.dec_ref(sub)
+        cls.flow.error_if(res == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.cache_offset(4)
+        cls.flow.dispatch()

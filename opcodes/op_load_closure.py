@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadClosure(OpCode):
@@ -14,24 +14,21 @@ class OpLoadClosure(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_CLOSURE
     """
-    OPCODE_NAME = 'LOAD_CLOSURE'
-    OPCODE_VALUE = 136
+    name = 'LOAD_CLOSURE'
+    value = 136
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_CLOSURE) {
-        #     PyObject *value;
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(LOAD_CLOSURE, (-- value)) {
         #     /* We keep LOAD_CLOSURE so that the bytecode stays more readable. */
         #     value = GETLOCAL(oparg);
-        #     if (value == NULL) goto unbound_local_error;
+        #     ERROR_IF(value == NULL, unbound_local_error);
         #     Py_INCREF(value);
-        #     STACK_GROW(1);
-        #     POKE(1, value);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # We keep LOAD_CLOSURE so that the bytecode stays more readable. 
+        value = cls.frame.get_local(oparg)
+        cls.flow.unbound_local_error_if(value == None)
+        cls.memory.inc_ref(value)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

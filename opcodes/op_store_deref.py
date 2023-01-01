@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreDeref(OpCode):
@@ -11,22 +11,21 @@ class OpStoreDeref(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STORE_DEREF
     """
-    OPCODE_NAME = 'STORE_DEREF'
-    OPCODE_VALUE = 138
+    name = 'STORE_DEREF'
+    value = 138
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(STORE_DEREF) {
-        #     PyObject *v = POP();
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(STORE_DEREF, (v --)) {
         #     PyObject *cell = GETLOCAL(oparg);
         #     PyObject *oldobj = PyCell_GET(cell);
         #     PyCell_SET(cell, v);
         #     Py_XDECREF(oldobj);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.stack.peek(1)
+        cell = cls.frame.get_local(oparg)
+        oldobj = cls.api.PyCell_GET(cell)
+        cls.api.PyCell_SET(cell, v)
+        cls.memory.dec_ref_x(oldobj)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

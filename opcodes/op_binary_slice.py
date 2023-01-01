@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinarySlice(OpCode):
@@ -10,18 +10,12 @@ class OpBinarySlice(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BINARY_SLICE
     """
-    OPCODE_NAME = 'BINARY_SLICE'
-    OPCODE_VALUE = 26
+    name = 'BINARY_SLICE'
+    value = 26
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, container, start, stop) -> None:
-        # TARGET(BINARY_SLICE) {
-        #     PyObject *stop = PEEK(1);
-        #     PyObject *start = PEEK(2);
-        #     PyObject *container = PEEK(3);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_SLICE, (container, start, stop -- res)) {
         #     PyObject *slice = _PyBuildSlice_ConsumeRefs(start, stop);
         #     // Can't use ERROR_IF() here, because we haven't
         #     // DECREF'ed container yet, and we still own slice.
@@ -33,12 +27,21 @@ class OpBinarySlice(OpCode):
         #         Py_DECREF(slice);
         #     }
         #     Py_DECREF(container);
-        #     if (res == NULL) goto pop_3_error;
-        #     STACK_SHRINK(2);
-        #     POKE(1, res);
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        stop = cls.stack.peek(1)
+        start = cls.stack.peek(2)
+        container = cls.stack.peek(3)
+        slice = cls.api.private.PyBuildSlice_ConsumeRefs(start, stop)
+        # Can't use ERROR_IF() here, because we haven't
+        # DECREF'ed container yet, and we still own slice.
+        if slice == None:
+            res = None
+        else:
+            res = cls.api.PyObject_GetItem(container, slice)
+            cls.memory.dec_ref(slice)
+        cls.memory.dec_ref(container)
+        cls.flow.error_if(res == None, 3)
+        cls.stack.shrink(2)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

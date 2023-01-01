@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpSend(OpCode):
@@ -15,14 +15,13 @@ class OpSend(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-SEND
     """
-    OPCODE_NAME = 'SEND'
-    OPCODE_VALUE = 123
+    name = 'SEND'
+    value = 123
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(SEND) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: SEND stack effect depends on jump flag
+        # inst(SEND) {
         #     assert(frame != &entry_frame);
         #     assert(STACK_LEVEL() >= 2);
         #     PyObject *v = POP();
@@ -69,9 +68,39 @@ class OpSend(OpCode):
         #         assert(retval != NULL);
         #         PUSH(retval);
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(frame != &entry_frame)
+        # assert(STACK_LEVEL() >= 2)
+        v = cls.stack.pop()
+        receiver = cls.stack.top()
+        if cls.frame.state.c_tracefunc == None:
+            gen_status = cls.api.PyIter_Send(receiver, v, retval)
+        else:
+            if cls.api.Py_IsNone(v) and cls.api.PyIter_Check(receiver):
+                retval = cls.api.Py_TYPE(receiver).tp_iternext(receiver)
+            else:
+                retval = cls.api.PyObject_CallMethodOneArg(receiver, cls.api.private.Py_ID('send'), v)
+            if retval == None:
+                if cls.frame.state.c_tracefunc != None
+                        and cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_StopIteration))
+                    call_exc_trace(cls.frame.state.c_tracefunc, cls.frame.state.c_traceobj, cls.frame.state, frame)
+                if cls.api.private.PyGen_FetchStopIterationValue(retval) == 0:
+                    gen_status = PYGEN_RETURN
+                else:
+                    gen_status = PYGEN_ERROR
+            else:
+                gen_status = PYGEN_NEXT
+        cls.memory.dec_ref(v)
+        if gen_status == PYGEN_ERROR:
+            # assert(retval == NULL)
+            cls.flow.error()
+        if gen_status == PYGEN_RETURN:
+            # assert(retval != NULL)
+            cls.memory.dec_ref(receiver)
+            cls.stack.set_top(retval)
+            cls.flow.jump_by(oparg)
+        else:
+            # assert(gen_status == PYGEN_NEXT)
+            # assert(retval != NULL)
+            cls.stack.push(retval)
+        cls.flow.dispatch()

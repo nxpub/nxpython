@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadClassderef(OpCode):
@@ -14,15 +14,13 @@ class OpLoadClassderef(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_CLASSDEREF
     """
-    OPCODE_NAME = 'LOAD_CLASSDEREF'
-    OPCODE_VALUE = 148
+    name = 'LOAD_CLASSDEREF'
+    value = 148
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_CLASSDEREF) {
-        #     PyObject *name, *value, *locals = LOCALS();
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(LOAD_CLASSDEREF, ( -- value)) {
+        #     PyObject *name, *locals = LOCALS();
         #     assert(locals);
         #     assert(oparg >= 0 && oparg < frame->f_code->co_nlocalsplus);
         #     name = PyTuple_GET_ITEM(frame->f_code->co_localsplusnames, oparg);
@@ -53,10 +51,30 @@ class OpLoadClassderef(OpCode):
         #         }
         #         Py_INCREF(value);
         #     }
-        #     PUSH(value);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        name, *locals = cls.frame.get_locals()
+        # assert(locals)
+        # assert(oparg >= 0 && oparg < frame->f_code->co_nlocalsplus)
+        name = cls.api.PyTuple_GET_ITEM(frame.f_code.co_localsplusnames, oparg)
+        if cls.api.PyDict_CheckExact(locals):
+            value = cls.api.PyDict_GetItemWithError(locals, name)
+            if value != None:
+                cls.memory.inc_ref(value)
+            elif cls.api.private.PyErr_Occurred(cls.frame.state):
+                cls.flow.error()
+        else:
+            value = cls.api.PyObject_GetItem(locals, name)
+            if value == None:
+                if not cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_KeyError):
+                    cls.flow.error()
+                cls.api.private.PyErr_Clear(cls.frame.state)
+        if not value:
+            cell = cls.frame.get_local(oparg)
+            value = cls.api.PyCell_GET(cell)
+            if value == None:
+                format_exc_unbound(cls.frame.state, frame.f_code, oparg)
+                cls.flow.error()
+            cls.memory.inc_ref(value)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

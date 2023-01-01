@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpUnaryInvert(OpCode):
@@ -8,23 +8,19 @@ class OpUnaryInvert(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-UNARY_INVERT
     """
-    OPCODE_NAME = 'UNARY_INVERT'
-    OPCODE_VALUE = 15
+    name = 'UNARY_INVERT'
+    value = 15
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, value) -> None:
-        # TARGET(UNARY_INVERT) {
-        #     PyObject *value = PEEK(1);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(UNARY_INVERT, (value -- res)) {
         #     res = PyNumber_Invert(value);
-        #     Py_DECREF(value);
-        #     if (res == NULL) goto pop_1_error;
-        #     POKE(1, res);
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.peek(1)
+        res = cls.api.PyNumber_Invert(value)
+        cls.memory.dec_ref(value)
+        cls.flow.error_if(res == None, 1)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

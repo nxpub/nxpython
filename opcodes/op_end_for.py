@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpEndFor(OpCode):
@@ -12,28 +12,11 @@ class OpEndFor(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-END_FOR
     """
-    OPCODE_NAME = 'END_FOR'
-    OPCODE_VALUE = 4
+    name = 'END_FOR'
+    value = 4
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(END_FOR) {
-        #     PyObject *_tmp_1 = PEEK(1);
-        #     PyObject *_tmp_2 = PEEK(2);
-        #     {
-        #         PyObject *value = _tmp_1;
-        #         Py_DECREF(value);
-        #     }
-        #     {
-        #         PyObject *value = _tmp_2;
-        #         Py_DECREF(value);
-        #     }
-        #     STACK_SHRINK(2);
-        #     DISPATCH();
-        # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+    @classmethod
+    def logic(cls) -> None:
+        # macro(END_FOR) = POP_TOP + POP_TOP;
+        OpCode['POP_TOP']()
+        OpCode['POP_TOP']()

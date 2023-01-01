@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpMakeCell(OpCode):
@@ -11,14 +11,12 @@ class OpMakeCell(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-MAKE_CELL
     """
-    OPCODE_NAME = 'MAKE_CELL'
-    OPCODE_VALUE = 135
+    name = 'MAKE_CELL'
+    value = 135
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(MAKE_CELL) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(MAKE_CELL, (--)) {
         #     // "initial" is probably NULL but not if it's an arg (or set
         #     // via PyFrame_LocalsToFast() before MAKE_CELL has run).
         #     PyObject *initial = GETLOCAL(oparg);
@@ -27,9 +25,12 @@ class OpMakeCell(OpCode):
         #         goto resume_with_error;
         #     }
         #     SETLOCAL(oparg, cell);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # "initial" is probably None but not if it's an arg (or set
+        # via cls.api.PyFrame_LocalsToFast() before MAKE_CELL has run).
+        initial = cls.frame.get_local(oparg)
+        cell = cls.api.PyCell_New(initial)
+        if cell == None:
+            cls.flow.resume_with_error()
+        SETLOCAL(oparg, cell)
+        cls.flow.dispatch()

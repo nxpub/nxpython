@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpGetYieldFromIter(OpCode):
@@ -11,14 +11,13 @@ class OpGetYieldFromIter(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-GET_YIELD_FROM_ITER
     """
-    OPCODE_NAME = 'GET_YIELD_FROM_ITER'
-    OPCODE_VALUE = 69
+    name = 'GET_YIELD_FROM_ITER'
+    value = 69
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(GET_YIELD_FROM_ITER) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- )
+        # inst(GET_YIELD_FROM_ITER) {
         #     /* before: [obj]; after [getiter(obj)] */
         #     PyObject *iterable = TOP();
         #     PyObject *iter;
@@ -44,9 +43,25 @@ class OpGetYieldFromIter(OpCode):
         #             goto error;
         #     }
         #     PREDICT(LOAD_CONST);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # before: [obj] after [getiter(obj)] 
+        iterable = cls.stack.top()
+        if cls.api.PyCoro_CheckExact(iterable):
+            # `iterable` is a coroutine 
+            if not (frame.f_code.co_flags & (CO_COROUTINE | CO_ITERABLE_COROUTINE)):
+                # and it is used in a 'yield from' expression of a
+        #            regular generator. 
+                cls.memory.dec_ref(iterable)
+                cls.stack.set_top(None)
+                cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_TypeError,
+                                 "cannot 'yield from' a coroutine object "
+                                 "in a non-coroutine generator")
+                cls.flow.error()
+        elif not cls.api.PyGen_CheckExact(iterable):
+            # `iterable` is not a generator. 
+            iter = cls.api.PyObject_GetIter(iterable)
+            cls.memory.dec_ref(iterable)
+            cls.stack.set_top(iter)
+            if iter == None:
+                cls.flow.error()
+        cls.flow.dispatch()

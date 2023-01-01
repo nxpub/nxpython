@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPushExcInfo(OpCode):
@@ -12,14 +12,13 @@ class OpPushExcInfo(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-PUSH_EXC_INFO
     """
-    OPCODE_NAME = 'PUSH_EXC_INFO'
-    OPCODE_VALUE = 35
+    name = 'PUSH_EXC_INFO'
+    value = 35
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(PUSH_EXC_INFO) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- __0)
+        # inst(PUSH_EXC_INFO) {
         #     PyObject *value = TOP();
 
         #     _PyErr_StackItem *exc_info = tstate->exc_info;
@@ -33,9 +32,17 @@ class OpPushExcInfo(OpCode):
         #     PUSH(Py_NewRef(value));
         #     assert(PyExceptionInstance_Check(value));
         #     exc_info->exc_value = value;
-        #     DISPATCH();
-        # }
-        raise NotImplementedError
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # }
+        value = cls.stack.top()
+
+        exc_info = cls.frame.state.exc_info
+        if exc_info.exc_value != None:
+            cls.stack.set_top(exc_info.exc_value)
+        else:
+            cls.stack.set_top(cls.api.Py_NewRef(cls.api.Py_None))
+
+        cls.stack.push(cls.api.Py_NewRef(value))
+        # assert(PyExceptionInstance_Check(value))
+        exc_info.exc_value = value
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCheckExcMatch(OpCode):
@@ -11,28 +11,31 @@ class OpCheckExcMatch(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-CHECK_EXC_MATCH
     """
-    OPCODE_NAME = 'CHECK_EXC_MATCH'
-    OPCODE_VALUE = 36
+    name = 'CHECK_EXC_MATCH'
+    value = 36
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CHECK_EXC_MATCH) {
-        #     PyObject *right = POP();
-        #     PyObject *left = TOP();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(CHECK_EXC_MATCH, (left, right -- left, b)) {
         #     assert(PyExceptionInstance_Check(left));
         #     if (check_except_type_valid(tstate, right) < 0) {
-        #          Py_DECREF(right);
-        #          goto error;
+        #          DECREF_INPUTS();
+        #          ERROR_IF(true, error);
         #     }
 
         #     int res = PyErr_GivenExceptionMatches(left, right);
-        #     Py_DECREF(right);
-        #     PUSH(Py_NewRef(res ? Py_True : Py_False));
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     b = Py_NewRef(res ? Py_True : Py_False);
         # }
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        # assert(PyExceptionInstance_Check(left))
+        if check_except_type_valid(cls.frame.state, right) < 0:
+             cls.memory.dec_ref(right)
+             cls.flow.error_if(True, 1)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        res = cls.api.PyErr_GivenExceptionMatches(left, right)
+        cls.memory.dec_ref(right)
+        b = cls.api.Py_NewRef(cls.api.Py_True if res else cls.api.Py_False)
+        cls.stack.poke(1, b)
+        cls.flow.dispatch()

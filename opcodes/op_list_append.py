@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpListAppend(OpCode):
@@ -8,22 +8,19 @@ class OpListAppend(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LIST_APPEND
     """
-    OPCODE_NAME = 'LIST_APPEND'
-    OPCODE_VALUE = 145
+    name = 'LIST_APPEND'
+    value = 145
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, v) -> None:
-        # TARGET(LIST_APPEND) {
-        #     PyObject *v = PEEK(1);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // Alternative: (list, unused[oparg], v -- list, unused[oparg])
+        # inst(LIST_APPEND, (v --)) {
         #     PyObject *list = PEEK(oparg + 1);  // +1 to account for v staying on stack
-        #     if (_PyList_AppendTakeRef((PyListObject *)list, v) < 0) goto pop_1_error;
-        #     STACK_SHRINK(1);
+        #     ERROR_IF(_PyList_AppendTakeRef((PyListObject *)list, v) < 0, error);
         #     PREDICT(JUMP_BACKWARD);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.stack.peek(1)
+        list = cls.stack.peek(oparg + 1)  # +1 to account for v staying on stack
+        cls.flow.error_if(cls.api.private.PyList_AppendTakeRef(list, v) < 0, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

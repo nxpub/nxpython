@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDeleteFast(OpCode):
@@ -8,20 +8,17 @@ class OpDeleteFast(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DELETE_FAST
     """
-    OPCODE_NAME = 'DELETE_FAST'
-    OPCODE_VALUE = 126
+    name = 'DELETE_FAST'
+    value = 126
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(DELETE_FAST) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DELETE_FAST, (--)) {
         #     PyObject *v = GETLOCAL(oparg);
-        #     if (v == NULL) goto unbound_local_error;
+        #     ERROR_IF(v == NULL, unbound_local_error);
         #     SETLOCAL(oparg, NULL);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.frame.get_local(oparg)
+        cls.flow.unbound_local_error_if(v == None)
+        SETLOCAL(oparg, None)
+        cls.flow.dispatch()

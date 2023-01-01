@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpJumpForward(OpCode):
@@ -8,18 +8,13 @@ class OpJumpForward(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-JUMP_FORWARD
     """
-    OPCODE_NAME = 'JUMP_FORWARD'
-    OPCODE_VALUE = 110
+    name = 'JUMP_FORWARD'
+    value = 110
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(JUMP_FORWARD) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(JUMP_FORWARD, (--)) {
         #     JUMPBY(oparg);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.flow.jump_by(oparg)
+        cls.flow.dispatch()

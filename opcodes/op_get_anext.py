@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpGetAnext(OpCode):
@@ -11,18 +11,14 @@ class OpGetAnext(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-GET_ANEXT
     """
-    OPCODE_NAME = 'GET_ANEXT'
-    OPCODE_VALUE = 51
+    name = 'GET_ANEXT'
+    value = 51
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(GET_ANEXT) {
+    @classmethod
+    def logic(cls) -> None:
+        # inst(GET_ANEXT, (aiter -- aiter, awaitable)) {
         #     unaryfunc getter = NULL;
         #     PyObject *next_iter = NULL;
-        #     PyObject *awaitable = NULL;
-        #     PyObject *aiter = TOP();
         #     PyTypeObject *type = Py_TYPE(aiter);
 
         #     if (PyAsyncGen_CheckExact(aiter)) {
@@ -64,11 +60,45 @@ class OpGetAnext(OpCode):
         #         }
         #     }
 
-        #     PUSH(awaitable);
         #     PREDICT(LOAD_CONST);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        aiter = cls.stack.peek(1)
+        getter = None
+        next_iter = None
+        type = cls.api.Py_TYPE(aiter)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if cls.api.PyAsyncGen_CheckExact(aiter):
+            awaitable = type.tp_as_async.am_anext(aiter)
+            if awaitable == None:
+                cls.flow.error()
+        else:
+            if type.tp_as_async != None:
+                getter = type.tp_as_async.am_anext
+
+            if getter != None:
+                next_iter = (*getter)(aiter)
+                if next_iter == None:
+                    cls.flow.error()
+            else:
+                cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_TypeError,
+                              "'async for' requires an iterator with "
+                              "__anext__ method, got %.100s",
+                              type.tp_name)
+                cls.flow.error()
+
+            awaitable = cls.api.private.PyCoro_GetAwaitableIter(next_iter)
+            if awaitable == None:
+                cls.api.private.PyErr_FormatFromCause(
+                    cls.api.PyExc_TypeError,
+                    "'async for' received an invalid object "
+                    "from __anext__: %.100s",
+                    cls.api.Py_TYPE(next_iter).tp_name)
+
+                cls.memory.dec_ref(next_iter)
+                cls.flow.error()
+            else:
+                cls.memory.dec_ref(next_iter)
+
+        cls.stack.grow(1)
+        cls.stack.poke(1, awaitable)
+        cls.flow.dispatch()

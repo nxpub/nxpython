@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallNoKwListAppend(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_NO_KW_LIST_APPEND'
-    OPCODE_VALUE = 42
+    name = 'CALL_NO_KW_LIST_APPEND'
+    value = 42
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_NO_KW_LIST_APPEND) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_NO_KW_LIST_APPEND) {
         #     assert(cframe.use_tracing == 0);
         #     assert(kwnames == NULL);
         #     assert(oparg == 1);
@@ -33,9 +32,23 @@ class OpCallNoKwListAppend(OpCode):
         #     // CALL + POP_TOP
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL + 1);
         #     assert(_Py_OPCODE(next_instr[-1]) == POP_TOP);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        # assert(kwnames == NULL)
+        # assert(oparg == 1)
+        callable = cls.stack.peek(3)
+        interp = cls.api.private.PyInterpreterState_GET()
+        cls.flow.deopt_if(callable != interp.callable_cache.list_append, 'CALL')
+        list = cls.stack.second()
+        cls.flow.deopt_if(not cls.api.PyList_Check(list), 'CALL')
+        cls.flow.stat_inc('CALL', 'hit')
+        arg = cls.stack.pop()
+        if cls.api.private.PyList_AppendTakeRef(list, arg) < 0:
+            cls.flow.error()
+        cls.stack.shrink(2)
+        cls.memory.dec_ref(list)
+        cls.memory.dec_ref(callable)
+        # CALL + POP_TOP
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_CALL + 1)
+        # assert(_Py_OPCODE(next_instr[-1]) == POP_TOP)
+        cls.flow.dispatch()

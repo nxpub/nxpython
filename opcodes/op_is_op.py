@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpIsOp(OpCode):
@@ -10,24 +10,22 @@ class OpIsOp(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-IS_OP
     """
-    OPCODE_NAME = 'IS_OP'
-    OPCODE_VALUE = 117
+    name = 'IS_OP'
+    value = 117
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(IS_OP) {
-        #     PyObject *right = POP();
-        #     PyObject *left = TOP();
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(IS_OP, (left, right -- b)) {
         #     int res = Py_Is(left, right) ^ oparg;
-        #     PyObject *b = res ? Py_True : Py_False;
-        #     SET_TOP(Py_NewRef(b));
-        #     Py_DECREF(left);
-        #     Py_DECREF(right);
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     b = Py_NewRef(res ? Py_True : Py_False);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        res = cls.api.Py_Is(left, right) ^ oparg
+        cls.memory.dec_ref(left)
+        cls.memory.dec_ref(right)
+        b = cls.api.Py_NewRef(cls.api.Py_True if res else cls.api.Py_False)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, b)
+        cls.flow.dispatch()

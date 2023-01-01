@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAttrSlot(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'LOAD_ATTR_SLOT'
-    OPCODE_VALUE = 77
+    name = 'LOAD_ATTR_SLOT'
+    value = 77
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ATTR_SLOT) {
+    @classmethod
+    def logic(cls) -> None:
+        # // error: LOAD_ATTR has irregular stack effect
+        # inst(LOAD_ATTR_SLOT) {
         #     assert(cframe.use_tracing == 0);
         #     PyObject *owner = TOP();
         #     PyObject *res;
@@ -32,9 +31,7 @@ class OpLoadAttrSlot(OpCode):
         #     SET_TOP(res);
         #     Py_DECREF(owner);
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_ATTR);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        owner = cls.stack.top()
+        tp = cls.api.Py_TYPE(owner)

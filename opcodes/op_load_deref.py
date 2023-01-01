@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadDeref(OpCode):
@@ -11,24 +11,26 @@ class OpLoadDeref(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_DEREF
     """
-    OPCODE_NAME = 'LOAD_DEREF'
-    OPCODE_VALUE = 137
+    name = 'LOAD_DEREF'
+    value = 137
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_DEREF) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(LOAD_DEREF, ( -- value)) {
         #     PyObject *cell = GETLOCAL(oparg);
-        #     PyObject *value = PyCell_GET(cell);
+        #     value = PyCell_GET(cell);
         #     if (value == NULL) {
         #         format_exc_unbound(tstate, frame->f_code, oparg);
-        #         goto error;
+        #         ERROR_IF(true, error);
         #     }
-        #     PUSH(Py_NewRef(value));
-        #     DISPATCH();
+        #     Py_INCREF(value);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cell = cls.frame.get_local(oparg)
+        value = cls.api.PyCell_GET(cell)
+        if value == None:
+            format_exc_unbound(cls.frame.state, frame.f_code, oparg)
+            cls.flow.error_if(True)
+        cls.memory.inc_ref(value)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

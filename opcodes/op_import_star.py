@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpImportStar(OpCode):
@@ -10,36 +10,45 @@ class OpImportStar(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-IMPORT_STAR
     """
-    OPCODE_NAME = 'IMPORT_STAR'
-    OPCODE_VALUE = 84
+    name = 'IMPORT_STAR'
+    value = 84
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(IMPORT_STAR) {
-        #     PyObject *from = POP(), *locals;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(IMPORT_STAR, (from --)) {
+        #     PyObject *locals;
         #     int err;
         #     if (_PyFrame_FastToLocalsWithError(frame) < 0) {
-        #         Py_DECREF(from);
-        #         goto error;
+        #         DECREF_INPUTS();
+        #         ERROR_IF(true, error);
         #     }
 
         #     locals = LOCALS();
         #     if (locals == NULL) {
         #         _PyErr_SetString(tstate, PyExc_SystemError,
         #                          "no locals found during 'import *'");
-        #         Py_DECREF(from);
-        #         goto error;
+        #         DECREF_INPUTS();
+        #         ERROR_IF(true, error);
         #     }
         #     err = import_all_from(tstate, locals, from);
         #     _PyFrame_LocalsToFast(frame, 0);
-        #     Py_DECREF(from);
-        #     if (err != 0)
-        #         goto error;
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(err, error);
         # }
-        raise NotImplementedError
+        from = cls.stack.peek(1)
+        if cls.api.private.PyFrame_FastToLocalsWithError(frame) < 0:
+            cls.memory.dec_ref(from)
+            cls.flow.error_if(True, 1)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        locals = cls.frame.get_locals()
+        if locals == None:
+            cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_SystemError,
+                             "no locals found during 'import *'")
+            cls.memory.dec_ref(from)
+            cls.flow.error_if(True, 1)
+        err = import_all_from(cls.frame.state, locals, from)
+        cls.api.private.PyFrame_LocalsToFast(frame, 0)
+        cls.memory.dec_ref(from)
+        cls.flow.error_if(err, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

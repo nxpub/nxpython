@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStopiterationError(OpCode):
@@ -12,14 +12,12 @@ class OpStopiterationError(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STOPITERATION_ERROR
     """
-    OPCODE_NAME = 'STOPITERATION_ERROR'
-    OPCODE_VALUE = 63
+    name = 'STOPITERATION_ERROR'
+    value = 63
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(STOPITERATION_ERROR) {
+    @classmethod
+    def logic(cls) -> None:
+        # inst(STOPITERATION_ERROR) {
         #     assert(frame->owner == FRAME_OWNED_BY_GENERATOR);
         #     PyObject *exc = TOP();
         #     assert(PyExceptionInstance_Check(exc));
@@ -58,9 +56,36 @@ class OpStopiterationError(OpCode):
         #         PyException_SetContext(error, exc);
         #         Py_DECREF(message);
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(frame->owner == FRAME_OWNED_BY_GENERATOR)
+        exc = cls.stack.top()
+        # assert(PyExceptionInstance_Check(exc))
+        const char *msg = None
+        if cls.api.PyErr_GivenExceptionMatches(exc, cls.api.PyExc_StopIteration):
+            msg = "generator raised StopIteration"
+            if frame.f_code.co_flags & CO_ASYNC_GENERATOR:
+                msg = "async generator raised StopIteration"
+            elif frame.f_code.co_flags & CO_COROUTINE:
+                msg = "coroutine raised StopIteration"
+        elif frame.f_code.co_flags & CO_ASYNC_GENERATOR:&&
+                cls.api.PyErr_GivenExceptionMatches(exc, cls.api.PyExc_StopAsyncIteration))
+        {
+            # code in `gen` raised a StopAsyncIteration error:
+        #     raise a RuntimeError.
+        #     
+            msg = "async generator raised StopAsyncIteration"
+        if msg != None:
+            message = cls.api.private.PyUnicode_FromASCII(msg, strlen(msg))
+            if message == None:
+                cls.flow.error()
+            error = cls.api.PyObject_CallOneArg(cls.api.PyExc_RuntimeError, message)
+            if error == None:
+                cls.memory.dec_ref(message)
+                cls.flow.error()
+            # assert(PyExceptionInstance_Check(error))
+            cls.stack.set_top(error)
+            cls.api.PyException_SetCause(error, cls.api.Py_NewRef(exc))
+            # Steal exc reference, rather than cls.api.Py_NewRef+Py_DECREF
+            cls.api.PyException_SetContext(error, exc)
+            cls.memory.dec_ref(message)
+        cls.flow.dispatch()

@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAttrMethodNoDict(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'LOAD_ATTR_METHOD_NO_DICT'
-    OPCODE_VALUE = 80
+    name = 'LOAD_ATTR_METHOD_NO_DICT'
+    value = 80
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ATTR_METHOD_NO_DICT) {
+    @classmethod
+    def logic(cls) -> None:
+        # // error: LOAD_ATTR has irregular stack effect
+        # inst(LOAD_ATTR_METHOD_NO_DICT) {
         #     assert(cframe.use_tracing == 0);
         #     PyObject *self = TOP();
         #     PyTypeObject *self_cls = Py_TYPE(self);
@@ -28,9 +27,7 @@ class OpLoadAttrMethodNoDict(OpCode):
         #     SET_TOP(Py_NewRef(res));
         #     PUSH(self);
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_ATTR);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        self = cls.stack.top()
+        self_cls = cls.api.Py_TYPE(self)

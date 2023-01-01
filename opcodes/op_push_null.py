@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPushNull(OpCode):
@@ -12,21 +12,15 @@ class OpPushNull(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-PUSH_NULL
     """
-    OPCODE_NAME = 'PUSH_NULL'
-    OPCODE_VALUE = 2
+    name = 'PUSH_NULL'
+    value = 2
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(PUSH_NULL) {
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(PUSH_NULL, (-- res)) {
         #     res = NULL;
-        #     STACK_GROW(1);
-        #     POKE(1, res);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        res = None
+        cls.stack.grow(1)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

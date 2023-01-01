@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadConst(OpCode):
@@ -8,23 +8,17 @@ class OpLoadConst(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_CONST
     """
-    OPCODE_NAME = 'LOAD_CONST'
-    OPCODE_VALUE = 100
+    name = 'LOAD_CONST'
+    value = 100
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_CONST) {
-        #     PREDICTED(LOAD_CONST);
-        #     PyObject *value;
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(LOAD_CONST, (-- value)) {
         #     value = GETITEM(consts, oparg);
         #     Py_INCREF(value);
-        #     STACK_GROW(1);
-        #     POKE(1, value);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.frame.get_const(oparg)
+        cls.memory.inc_ref(value)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpUnpackSequence(OpCode):
@@ -9,15 +9,13 @@ class OpUnpackSequence(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-UNPACK_SEQUENCE
     """
-    OPCODE_NAME = 'UNPACK_SEQUENCE'
-    OPCODE_VALUE = 92
+    name = 'UNPACK_SEQUENCE'
+    value = 92
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(UNPACK_SEQUENCE) {
-        #     PREDICTED(UNPACK_SEQUENCE);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__0 -- __array[oparg])
+        # inst(UNPACK_SEQUENCE) {
         #     _PyUnpackSequenceCache *cache = (_PyUnpackSequenceCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -37,9 +35,13 @@ class OpUnpackSequence(OpCode):
         #     STACK_GROW(oparg);
         #     Py_DECREF(seq);
         #     JUMPBY(INLINE_CACHE_ENTRIES_UNPACK_SEQUENCE);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        seq = cls.stack.pop()
+        top = cls.stack + oparg
+        if not unpack_iterable(cls.frame.state, seq, oparg, -1, top):
+            cls.memory.dec_ref(seq)
+            cls.flow.error()
+        cls.stack.grow(oparg)
+        cls.memory.dec_ref(seq)
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_UNPACK_SEQUENCE)
+        cls.flow.dispatch()

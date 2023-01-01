@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildSlice(OpCode):
@@ -10,14 +10,13 @@ class OpBuildSlice(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_SLICE
     """
-    OPCODE_NAME = 'BUILD_SLICE'
-    OPCODE_VALUE = 133
+    name = 'BUILD_SLICE'
+    value = 133
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_SLICE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: BUILD_SLICE has irregular stack effect
+        # inst(BUILD_SLICE) {
         #     PyObject *start, *stop, *step, *slice;
         #     if (oparg == 3)
         #         step = POP();
@@ -32,9 +31,19 @@ class OpBuildSlice(OpCode):
         #     SET_TOP(slice);
         #     if (slice == NULL)
         #         goto error;
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        start, *stop, *step, *slice
+        if oparg == 3:
+            step = cls.stack.pop()
+        else:
+            step = None
+        stop = cls.stack.pop()
+        start = cls.stack.top()
+        slice = cls.api.PySlice_New(start, stop, step)
+        cls.memory.dec_ref(start)
+        cls.memory.dec_ref(stop)
+        cls.memory.dec_ref_x(step)
+        cls.stack.set_top(slice)
+        if slice == None:
+            cls.flow.error()
+        cls.flow.dispatch()

@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallNoKwLen(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_NO_KW_LEN'
-    OPCODE_VALUE = 41
+    name = 'CALL_NO_KW_LEN'
+    value = 41
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_NO_KW_LEN) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_NO_KW_LEN) {
         #     assert(cframe.use_tracing == 0);
         #     assert(kwnames == NULL);
         #     /* len(o) */
@@ -40,9 +39,29 @@ class OpCallNoKwLen(OpCode):
         #         goto error;
         #     }
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        # assert(kwnames == NULL)
+        # len(o) 
+        is_meth = is_method(cls.stack, oparg)
+        total_args = oparg + is_meth
+        cls.flow.deopt_if(total_args != 1, 'CALL')
+        callable = cls.stack.peek(total_args + 1)
+        interp = cls.api.private.PyInterpreterState_GET()
+        cls.flow.deopt_if(callable != interp.callable_cache.len, 'CALL')
+        cls.flow.stat_inc('CALL', 'hit')
+        arg = cls.stack.top()
+        len_i = cls.api.PyObject_Length(arg)
+        if len_i < 0:
+            cls.flow.error()
+        res = cls.api.PyLong_FromSsize_t(len_i)
+        # assert((res != NULL) ^ (_PyErr_Occurred(tstate) != NULL))
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.stack.shrink(2-is_meth)
+        cls.stack.set_top(res)
+        cls.memory.dec_ref(callable)
+        cls.memory.dec_ref(arg)
+        if res == None:
+            cls.flow.error()
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_CALL)
+        cls.flow.dispatch()

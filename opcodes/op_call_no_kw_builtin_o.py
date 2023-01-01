@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallNoKwBuiltinO(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_NO_KW_BUILTIN_O'
-    OPCODE_VALUE = 39
+    name = 'CALL_NO_KW_BUILTIN_O'
+    value = 39
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_NO_KW_BUILTIN_O) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_NO_KW_BUILTIN_O) {
         #     assert(cframe.use_tracing == 0);
         #     /* Builtin METH_O functions */
         #     assert(kwnames == NULL);
@@ -44,9 +43,33 @@ class OpCallNoKwBuiltinO(OpCode):
         #     }
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL);
         #     CHECK_EVAL_BREAKER();
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        # Builtin METH_O functions 
+        # assert(kwnames == NULL)
+        is_meth = is_method(cls.stack, oparg)
+        total_args = oparg + is_meth
+        cls.flow.deopt_if(total_args != 1, 'CALL')
+        callable = cls.stack.peek(total_args + 1)
+        cls.flow.deopt_if(not cls.api.PyCFunction_CheckExact(callable), 'CALL')
+        cls.flow.deopt_if(cls.api.PyCFunction_GET_FLAGS(callable) != METH_O, 'CALL')
+        cls.flow.stat_inc('CALL', 'hit')
+        cfunc = cls.api.PyCFunction_GET_FUNCTION(callable)
+        # This is slower but CPython promises to check all non-vectorcall
+        # function calls.
+        if cls.api.private.Py_EnterRecursiveCallTstate(cls.frame.state, " while calling a cls.api.Python object"):
+            cls.flow.error()
+        arg = cls.stack.top()
+        res = cls.api.private.PyCFunction_TrampolineCall(cfunc, cls.api.PyCFunction_GET_SELF(callable), arg)
+        cls.api.private.Py_LeaveRecursiveCallTstate(cls.frame.state)
+        # assert((res != NULL) ^ (_PyErr_Occurred(tstate) != NULL))
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.memory.dec_ref(arg)
+        cls.memory.dec_ref(callable)
+        cls.stack.shrink(2-is_meth)
+        cls.stack.set_top(res)
+        if res == None:
+            cls.flow.error()
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_CALL)
+        cls.flow.check_eval_breaker()
+        cls.flow.dispatch()

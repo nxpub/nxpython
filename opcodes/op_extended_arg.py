@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpExtendedArg(OpCode):
@@ -11,14 +11,13 @@ class OpExtendedArg(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-EXTENDED_ARG
     """
-    OPCODE_NAME = 'EXTENDED_ARG'
-    OPCODE_VALUE = 144
+    name = 'EXTENDED_ARG'
+    value = 144
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(EXTENDED_ARG) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: ( -- )
+        # inst(EXTENDED_ARG) {
         #     assert(oparg);
         #     assert(cframe.use_tracing == 0);
         #     opcode = _Py_OPCODE(*next_instr);
@@ -26,7 +25,9 @@ class OpExtendedArg(OpCode):
         #     PRE_DISPATCH_GOTO();
         #     DISPATCH_GOTO();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(oparg)
+        # assert(cframe.use_tracing == 0)
+        opcode = cls.api.private.Py_OPCODE(*next_instr)
+        oparg = oparg << 8 | cls.api.private.Py_OPARG(*next_instr)
+        PRE_DISPATCH_GOTO()
+        DISPATCH_GOTO()

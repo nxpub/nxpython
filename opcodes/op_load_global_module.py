@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadGlobalModule(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'LOAD_GLOBAL_MODULE'
-    OPCODE_VALUE = 153
+    name = 'LOAD_GLOBAL_MODULE'
+    value = 153
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_GLOBAL_MODULE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: LOAD_GLOBAL has irregular stack effect
+        # inst(LOAD_GLOBAL_MODULE) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyDict_CheckExact(GLOBALS()), LOAD_GLOBAL);
         #     PyDictObject *dict = (PyDictObject *)GLOBALS();
@@ -30,9 +29,7 @@ class OpLoadGlobalModule(OpCode):
         #     STAT_INC(LOAD_GLOBAL, hit);
         #     STACK_GROW(push_null+1);
         #     SET_TOP(Py_NewRef(res));
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyDict_CheckExact(cls.frame.get_globals()), 'LOAD_GLOBAL')
+        dict = cls.frame.get_globals()

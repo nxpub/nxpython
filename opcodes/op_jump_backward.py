@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpJumpBackward(OpCode):
@@ -10,21 +10,17 @@ class OpJumpBackward(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-JUMP_BACKWARD
     """
-    OPCODE_NAME = 'JUMP_BACKWARD'
-    OPCODE_VALUE = 140
+    name = 'JUMP_BACKWARD'
+    value = 140
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(JUMP_BACKWARD) {
-        #     PREDICTED(JUMP_BACKWARD);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(JUMP_BACKWARD, (--)) {
         #     assert(oparg < INSTR_OFFSET());
         #     JUMPBY(-oparg);
         #     CHECK_EVAL_BREAKER();
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(oparg < INSTR_OFFSET())
+        cls.flow.jump_by(-oparg)
+        cls.flow.check_eval_breaker()
+        cls.flow.dispatch()

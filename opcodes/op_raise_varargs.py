@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpRaiseVarargs(OpCode):
@@ -16,14 +16,13 @@ class OpRaiseVarargs(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-RAISE_VARARGS
     """
-    OPCODE_NAME = 'RAISE_VARARGS'
-    OPCODE_VALUE = 130
+    name = 'RAISE_VARARGS'
+    value = 130
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(RAISE_VARARGS) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg] -- )
+        # inst(RAISE_VARARGS) {
         #     PyObject *cause = NULL, *exc = NULL;
         #     switch (oparg) {
         #     case 2:
@@ -44,7 +43,20 @@ class OpRaiseVarargs(OpCode):
         #     }
         #     goto error;
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cause = None, *exc = None
+        switch (oparg) {
+        case 2:
+        #     cause = POP() /* cause 
+            # fall through 
+        case 1:
+        #     exc = POP() /* exc 
+            # fall through 
+        case 0:
+            if do_raise(cls.frame.state, exc, cause):
+                cls.flow.exception_unwind()
+            break
+        default:
+            cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_SystemError,
+                             "bad RAISE_VARARGS oparg")
+            break
+        cls.flow.error()

@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCallNoKwBuiltinFast(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'CALL_NO_KW_BUILTIN_FAST'
-    OPCODE_VALUE = 38
+    name = 'CALL_NO_KW_BUILTIN_FAST'
+    value = 38
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CALL_NO_KW_BUILTIN_FAST) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: (__0, __array[oparg] -- )
+        # inst(CALL_NO_KW_BUILTIN_FAST) {
         #     assert(cframe.use_tracing == 0);
         #     /* Builtin METH_FASTCALL functions, without keywords */
         #     assert(kwnames == NULL);
@@ -50,9 +49,39 @@ class OpCallNoKwBuiltinFast(OpCode):
         #     }
         #     JUMPBY(INLINE_CACHE_ENTRIES_CALL);
         #     CHECK_EVAL_BREAKER();
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        # Builtin METH_FASTCALL functions, without keywords 
+        # assert(kwnames == NULL)
+        is_meth = is_method(cls.stack, oparg)
+        total_args = oparg + is_meth
+        callable = cls.stack.peek(total_args + 1)
+        cls.flow.deopt_if(not cls.api.PyCFunction_CheckExact(callable), 'CALL')
+        DEOPT_IF(cls.api.PyCFunction_GET_FLAGS(callable) != METH_FASTCALL,
+            CALL)
+        cls.flow.stat_inc('CALL', 'hit')
+        cfunc = cls.api.PyCFunction_GET_FUNCTION(callable)
+        cls.stack.shrink(total_args)
+        # res = func(self, args, nargs) 
+        res = ((cls.api.private.PyCFunctionFast)(void(*)(void))cfunc)(
+            cls.api.PyCFunction_GET_SELF(callable),
+            cls.stack,
+            total_args)
+        # assert((res != NULL) ^ (_PyErr_Occurred(tstate) != NULL))
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # Free the arguments. 
+        for i in range(0, total_args, +1):
+            cls.memory.dec_ref(cls.stack[i])
+        cls.stack.shrink(2-is_meth)
+        cls.stack.push(res)
+        cls.memory.dec_ref(callable)
+        if res == None:
+            # Not deopting because this doesn't mean our optimization was
+        #        wrong. `res` can be NULL for valid reasons. Eg. getattr(x,
+        #        'invalid'). In those cases an exception is set, so we must
+        #        handle it.
+        #     
+            cls.flow.error()
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_CALL)
+        cls.flow.check_eval_breaker()
+        cls.flow.dispatch()

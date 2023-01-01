@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpCheckEgMatch(OpCode):
@@ -16,14 +16,13 @@ class OpCheckEgMatch(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-CHECK_EG_MATCH
     """
-    OPCODE_NAME = 'CHECK_EG_MATCH'
-    OPCODE_VALUE = 37
+    name = 'CHECK_EG_MATCH'
+    value = 37
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(CHECK_EG_MATCH) {
+    @classmethod
+    def logic(cls) -> None:
+        # // stack effect: ( -- )
+        # inst(CHECK_EG_MATCH) {
         #     PyObject *match_type = POP();
         #     if (check_except_star_type_valid(tstate, match_type) < 0) {
         #         Py_DECREF(match_type);
@@ -61,9 +60,37 @@ class OpCheckEgMatch(OpCode):
         #         PyErr_SetExcInfo(NULL, Py_NewRef(match), NULL);
         #         Py_DECREF(exc_value);
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        match_type = cls.stack.pop()
+        if check_except_star_type_valid(cls.frame.state, match_type) < 0:
+            cls.memory.dec_ref(match_type)
+            cls.flow.error()
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        exc_value = cls.stack.top()
+        match = None, *rest = None
+        res = exception_group_match(exc_value, match_type,
+                                        match, rest)
+        cls.memory.dec_ref(match_type)
+        if res < 0:
+            cls.flow.error()
+
+        if match == None or rest == None:
+            # assert(match == NULL)
+            # assert(rest == NULL)
+            cls.flow.error()
+        if cls.api.Py_IsNone(match):
+            cls.stack.push(match)
+            cls.memory.dec_ref_x(rest)
+        else:
+            # Total or partial match - update the stack from
+        #      * [val]
+        #      * to
+        #      * [rest, match]
+        #      * (rest can be Py_None)
+        #      
+
+            cls.stack.set_top(rest)
+            cls.stack.push(match)
+            cls.api.PyErr_SetExcInfo(None, cls.api.Py_NewRef(match), None)
+            cls.memory.dec_ref(exc_value)
+        cls.flow.dispatch()

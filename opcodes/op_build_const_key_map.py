@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildConstKeyMap(OpCode):
@@ -12,14 +12,13 @@ class OpBuildConstKeyMap(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_CONST_KEY_MAP
     """
-    OPCODE_NAME = 'BUILD_CONST_KEY_MAP'
-    OPCODE_VALUE = 156
+    name = 'BUILD_CONST_KEY_MAP'
+    value = 156
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_CONST_KEY_MAP) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg] -- )
+        # inst(BUILD_CONST_KEY_MAP) {
         #     PyObject *map;
         #     PyObject *keys = TOP();
         #     if (!PyTuple_CheckExact(keys) ||
@@ -40,9 +39,21 @@ class OpBuildConstKeyMap(OpCode):
         #         Py_DECREF(POP());
         #     }
         #     PUSH(map);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        keys = cls.stack.top()
+        if not cls.api.PyTuple_CheckExact(keys:||
+            cls.api.PyTuple_GET_SIZE(keys) != (cls.api.Py_ssize_t)oparg) {
+            cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_SystemError,
+                             "bad BUILD_CONST_KEY_MAP keys argument")
+            cls.flow.error()
+        map = cls.api.private.PyDict_FromItems(
+                cls.api.PyTuple_GET_ITEM(keys, 0), 1,
+                cls.stack.peek(oparg + 1), 1, oparg)
+        if map == None:
+            cls.flow.error()
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.memory.dec_ref(cls.stack.pop())
+        for oparg in range(oparg, 0, -1):
+            cls.memory.dec_ref(cls.stack.pop())
+        cls.stack.push(map)
+        cls.flow.dispatch()

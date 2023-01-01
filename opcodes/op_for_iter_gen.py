@@ -1,19 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpForIterGen(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'FOR_ITER_GEN'
-    OPCODE_VALUE = 65
+    name = 'FOR_ITER_GEN'
+    value = 65
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(FOR_ITER_GEN) {
+    @classmethod
+    def logic(cls) -> None:
+        # inst(FOR_ITER_GEN) {
         #     assert(cframe.use_tracing == 0);
         #     PyGenObject *gen = (PyGenObject *)TOP();
         #     DEOPT_IF(Py_TYPE(gen) != &PyGen_Type, FOR_ITER);
@@ -29,7 +27,17 @@ class OpForIterGen(OpCode):
         #     assert(_Py_OPCODE(*next_instr) == END_FOR);
         #     DISPATCH_INLINED(gen_frame);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        gen = cls.stack.top()
+        cls.flow.deopt_if(cls.api.Py_TYPE(gen) != cls.api.PyGen_Type, 'FOR_ITER')
+        cls.flow.deopt_if(gen.gi_frame_state >= FRAME_EXECUTING, 'FOR_ITER')
+        cls.flow.stat_inc('FOR_ITER', 'hit')
+        gen_frame = gen.gi_iframe
+        frame.yield_offset = oparg
+        cls.api.private.PyFrame_StackPush(gen_frame, cls.api.Py_NewRef(cls.api.Py_None))
+        gen.gi_frame_state = FRAME_EXECUTING
+        gen.gi_exc_state.previous_item = cls.frame.state.exc_info
+        cls.frame.state.exc_info = gen.gi_exc_state
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_FOR_ITER + oparg)
+        # assert(_Py_OPCODE(*next_instr) == END_FOR)
+        DISPATCH_INLINED(gen_frame)

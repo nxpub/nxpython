@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAttrProperty(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'LOAD_ATTR_PROPERTY'
-    OPCODE_VALUE = 76
+    name = 'LOAD_ATTR_PROPERTY'
+    value = 76
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ATTR_PROPERTY) {
+    @classmethod
+    def logic(cls) -> None:
+        # // error: LOAD_ATTR has irregular stack effect
+        # inst(LOAD_ATTR_PROPERTY) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(tstate->interp->eval_frame, LOAD_ATTR);
         #     _PyLoadMethodCache *cache = (_PyLoadMethodCache *)next_instr;
@@ -45,7 +44,6 @@ class OpLoadAttrProperty(OpCode):
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_ATTR);
         #     DISPATCH_INLINED(new_frame);
         # }
-        raise NotImplementedError
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(cls.frame.state.interp.eval_frame, 'LOAD_ATTR')
 
-    def load(self, stack) -> None:
-        raise NotImplementedError

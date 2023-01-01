@@ -1,3 +1,4 @@
+from .base import OpCode, Instruction, environment
 from .op_nop import OpNop
 from .op_resume import OpResume
 from .op_load_closure import OpLoadClosure

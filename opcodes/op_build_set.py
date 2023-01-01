@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildSet(OpCode):
@@ -8,14 +8,13 @@ class OpBuildSet(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_SET
     """
-    OPCODE_NAME = 'BUILD_SET'
-    OPCODE_VALUE = 104
+    name = 'BUILD_SET'
+    value = 104
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_SET) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg] -- __0)
+        # inst(BUILD_SET) {
         #     PyObject *set = PySet_New(NULL);
         #     int err = 0;
         #     int i;
@@ -33,9 +32,19 @@ class OpBuildSet(OpCode):
         #         goto error;
         #     }
         #     PUSH(set);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        set = cls.api.PySet_New(None)
+        err = 0
+        if set == None:
+            cls.flow.error()
+        for i in range(oparg, 0, -1):
+            item = cls.stack.peek(i)
+            if err == 0:
+                err = cls.api.PySet_Add(set, item)
+            cls.memory.dec_ref(item)
+        cls.stack.shrink(oparg)
+        if err != 0:
+            cls.memory.dec_ref(set)
+            cls.flow.error()
+        cls.stack.push(set)
+        cls.flow.dispatch()

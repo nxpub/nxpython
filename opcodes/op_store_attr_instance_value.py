@@ -1,23 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreAttrInstanceValue(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'STORE_ATTR_INSTANCE_VALUE'
-    OPCODE_VALUE = 154
+    name = 'STORE_ATTR_INSTANCE_VALUE'
+    value = 154
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, type_version, index, value, owner) -> None:
-        # TARGET(STORE_ATTR_INSTANCE_VALUE) {
-        #     PyObject *owner = PEEK(1);
-        #     PyObject *value = PEEK(2);
-        #     uint32_t type_version = read_u32(&next_instr[1].cache);
-        #     uint16_t index = read_u16(&next_instr[3].cache);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(STORE_ATTR_INSTANCE_VALUE, (unused/1, type_version/2, index/1, value, owner --)) {
         #     assert(cframe.use_tracing == 0);
         #     PyTypeObject *tp = Py_TYPE(owner);
         #     assert(type_version != 0);
@@ -36,11 +30,27 @@ class OpStoreAttrInstanceValue(OpCode):
         #         Py_DECREF(old_value);
         #     }
         #     Py_DECREF(owner);
-        #     STACK_SHRINK(2);
-        #     JUMPBY(4);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        owner = cls.stack.peek(1)
+        value = cls.stack.peek(2)
+        type_version = read_u32(next_instr[1].cache)
+        index = read_u16(next_instr[3].cache)
+        # assert(cframe.use_tracing == 0)
+        tp = cls.api.Py_TYPE(owner)
+        # assert(type_version != 0)
+        cls.flow.deopt_if(tp.tp_version_tag != type_version, 'STORE_ATTR')
+        # assert(tp->tp_flags & Py_TPFLAGS_MANAGED_DICT)
+        dorv = *_PyObject_DictOrValuesPointer(owner)
+        cls.flow.deopt_if(not cls.api.private.PyDictOrValues_IsValues(dorv), 'STORE_ATTR')
+        cls.flow.stat_inc('STORE_ATTR', 'hit')
+        values = cls.api.private.PyDictOrValues_GetValues(dorv)
+        old_value = values.values[index]
+        values.values[index] = value
+        if old_value == None:
+            cls.api.private.PyDictValues_AddToInsertionOrder(values, index)
+        else:
+            cls.memory.dec_ref(old_value)
+        cls.memory.dec_ref(owner)
+        cls.stack.shrink(2)
+        cls.flow.cache_offset(4)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPrepReraiseStar(OpCode):
@@ -14,30 +14,28 @@ class OpPrepReraiseStar(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-PREP_RERAISE_STAR
     """
-    OPCODE_NAME = 'PREP_RERAISE_STAR'
-    OPCODE_VALUE = 88
+    name = 'PREP_RERAISE_STAR'
+    value = 88
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(PREP_RERAISE_STAR) {
-        #     PyObject *excs = POP();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(PREP_RERAISE_STAR, (orig, excs -- val)) {
         #     assert(PyList_Check(excs));
-        #     PyObject *orig = POP();
 
-        #     PyObject *val = _PyExc_PrepReraiseStar(orig, excs);
-        #     Py_DECREF(excs);
-        #     Py_DECREF(orig);
+        #     val = _PyExc_PrepReraiseStar(orig, excs);
+        #     DECREF_INPUTS();
 
-        #     if (val == NULL) {
-        #         goto error;
-        #     }
-
-        #     PUSH(val);
-        #     DISPATCH();
+        #     ERROR_IF(val == NULL, error);
         # }
-        raise NotImplementedError
+        excs = cls.stack.peek(1)
+        orig = cls.stack.peek(2)
+        # assert(PyList_Check(excs))
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        val = cls.api.private.PyExc_PrepReraiseStar(orig, excs)
+        cls.memory.dec_ref(orig)
+        cls.memory.dec_ref(excs)
+
+        cls.flow.error_if(val == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, val)
+        cls.flow.dispatch()

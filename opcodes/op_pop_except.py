@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPopExcept(OpCode):
@@ -10,21 +10,17 @@ class OpPopExcept(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-POP_EXCEPT
     """
-    OPCODE_NAME = 'POP_EXCEPT'
-    OPCODE_VALUE = 89
+    name = 'POP_EXCEPT'
+    value = 89
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(POP_EXCEPT) {
+    @classmethod
+    def logic(cls) -> None:
+        # inst(POP_EXCEPT, (exc_value -- )) {
         #     _PyErr_StackItem *exc_info = tstate->exc_info;
-        #     PyObject *value = exc_info->exc_value;
-        #     exc_info->exc_value = POP();
-        #     Py_XDECREF(value);
-        #     DISPATCH();
+        #     Py_XSETREF(exc_info->exc_value, exc_value);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        exc_value = cls.stack.peek(1)
+        exc_info = cls.frame.state.exc_info
+        cls.api.Py_XSETREF(exc_info.exc_value, exc_value)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

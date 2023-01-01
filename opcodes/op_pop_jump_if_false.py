@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPopJumpIfFalse(OpCode):
@@ -14,15 +14,13 @@ class OpPopJumpIfFalse(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-POP_JUMP_IF_FALSE
     """
-    OPCODE_NAME = 'POP_JUMP_IF_FALSE'
-    OPCODE_VALUE = 114
+    name = 'POP_JUMP_IF_FALSE'
+    value = 114
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(POP_JUMP_IF_FALSE) {
-        #     PREDICTED(POP_JUMP_IF_FALSE);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__0 -- )
+        # inst(POP_JUMP_IF_FALSE) {
         #     PyObject *cond = POP();
         #     if (Py_IsTrue(cond)) {
         #         _Py_DECREF_NO_DEALLOC(cond);
@@ -42,9 +40,20 @@ class OpPopJumpIfFalse(OpCode):
         #         else
         #             goto error;
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cond = cls.stack.pop()
+        if cls.api.Py_IsTrue(cond):
+            cls.memory.dec_ref_no_dealloc(cond)
+        elif cls.api.Py_IsFalse(cond):
+            cls.memory.dec_ref_no_dealloc(cond)
+            cls.flow.jump_by(oparg)
+        else:
+            err = cls.api.PyObject_IsTrue(cond)
+            cls.memory.dec_ref(cond)
+            if err > 0:
+                
+            elif err == 0:
+                cls.flow.jump_by(oparg)
+            else:
+                cls.flow.error()
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAssertionError(OpCode):
@@ -11,19 +11,15 @@ class OpLoadAssertionError(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_ASSERTION_ERROR
     """
-    OPCODE_NAME = 'LOAD_ASSERTION_ERROR'
-    OPCODE_VALUE = 74
+    name = 'LOAD_ASSERTION_ERROR'
+    value = 74
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ASSERTION_ERROR) {
-        #     PyObject *value = PyExc_AssertionError;
-        #     PUSH(Py_NewRef(value));
-        #     DISPATCH();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(LOAD_ASSERTION_ERROR, ( -- value)) {
+        #     value = Py_NewRef(PyExc_AssertionError);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.api.Py_NewRef(cls.api.PyExc_AssertionError)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

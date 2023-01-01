@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpUnaryNot(OpCode):
@@ -8,19 +8,15 @@ class OpUnaryNot(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-UNARY_NOT
     """
-    OPCODE_NAME = 'UNARY_NOT'
-    OPCODE_VALUE = 12
+    name = 'UNARY_NOT'
+    value = 12
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, value) -> None:
-        # TARGET(UNARY_NOT) {
-        #     PyObject *value = PEEK(1);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(UNARY_NOT, (value -- res)) {
         #     int err = PyObject_IsTrue(value);
-        #     Py_DECREF(value);
-        #     if (err < 0) goto pop_1_error;
+        #     DECREF_INPUTS();
+        #     ERROR_IF(err < 0, error);
         #     if (err == 0) {
         #         res = Py_True;
         #     }
@@ -28,10 +24,15 @@ class OpUnaryNot(OpCode):
         #         res = Py_False;
         #     }
         #     Py_INCREF(res);
-        #     POKE(1, res);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.peek(1)
+        err = cls.api.PyObject_IsTrue(value)
+        cls.memory.dec_ref(value)
+        cls.flow.error_if(err < 0, 1)
+        if err == 0:
+            res = cls.api.Py_True
+        else:
+            res = cls.api.Py_False
+        cls.memory.inc_ref(res)
+        cls.stack.poke(1, res)
+        cls.flow.dispatch()

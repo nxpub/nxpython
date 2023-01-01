@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPopJumpIfNotNone(OpCode):
@@ -12,22 +12,21 @@ class OpPopJumpIfNotNone(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-POP_JUMP_IF_NOT_NONE
     """
-    OPCODE_NAME = 'POP_JUMP_IF_NOT_NONE'
-    OPCODE_VALUE = 128
+    name = 'POP_JUMP_IF_NOT_NONE'
+    value = 128
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(POP_JUMP_IF_NOT_NONE) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__0 -- )
+        # inst(POP_JUMP_IF_NOT_NONE) {
         #     PyObject *value = POP();
         #     if (!Py_IsNone(value)) {
         #         JUMPBY(oparg);
         #     }
         #     Py_DECREF(value);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.pop()
+        if not cls.api.Py_IsNone(value):
+            cls.flow.jump_by(oparg)
+        cls.memory.dec_ref(value)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpPopTop(OpCode):
@@ -8,20 +8,15 @@ class OpPopTop(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-POP_TOP
     """
-    OPCODE_NAME = 'POP_TOP'
-    OPCODE_VALUE = 1
+    name = 'POP_TOP'
+    value = 1
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, value) -> None:
-        # TARGET(POP_TOP) {
-        #     PyObject *value = PEEK(1);
-        #     Py_DECREF(value);
-        #     STACK_SHRINK(1);
-        #     DISPATCH();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(POP_TOP, (value --)) {
+        #     DECREF_INPUTS();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.peek(1)
+        cls.memory.dec_ref(value)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

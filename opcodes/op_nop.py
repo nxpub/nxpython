@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpNop(OpCode):
@@ -9,17 +9,11 @@ class OpNop(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-NOP
     """
-    OPCODE_NAME = 'NOP'
-    OPCODE_VALUE = 9
+    name = 'NOP'
+    value = 9
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(NOP) {
-        #     DISPATCH();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(NOP, (--)) {
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpListToTuple(OpCode):
@@ -10,24 +10,19 @@ class OpListToTuple(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LIST_TO_TUPLE
     """
-    OPCODE_NAME = 'LIST_TO_TUPLE'
-    OPCODE_VALUE = 82
+    name = 'LIST_TO_TUPLE'
+    value = 82
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LIST_TO_TUPLE) {
-        #     PyObject *list = POP();
-        #     PyObject *tuple = PyList_AsTuple(list);
-        #     Py_DECREF(list);
-        #     if (tuple == NULL) {
-        #         goto error;
-        #     }
-        #     PUSH(tuple);
-        #     DISPATCH();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(LIST_TO_TUPLE, (list -- tuple)) {
+        #     tuple = PyList_AsTuple(list);
+        #     DECREF_INPUTS();
+        #     ERROR_IF(tuple == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        list = cls.stack.peek(1)
+        tuple = cls.api.PyList_AsTuple(list)
+        cls.memory.dec_ref(list)
+        cls.flow.error_if(tuple == None, 1)
+        cls.stack.poke(1, tuple)
+        cls.flow.dispatch()

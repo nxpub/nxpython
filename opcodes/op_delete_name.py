@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpDeleteName(OpCode):
@@ -9,14 +9,12 @@ class OpDeleteName(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-DELETE_NAME
     """
-    OPCODE_NAME = 'DELETE_NAME'
-    OPCODE_VALUE = 91
+    name = 'DELETE_NAME'
+    value = 91
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(DELETE_NAME) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(DELETE_NAME, (--)) {
         #     PyObject *name = GETITEM(names, oparg);
         #     PyObject *ns = LOCALS();
         #     int err;
@@ -33,9 +31,18 @@ class OpDeleteName(OpCode):
         #                              name);
         #         goto error;
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        name = cls.frame.get_name(oparg)
+        ns = cls.frame.get_locals()
+        if ns == None:
+            cls.api.private.PyErr_Format(cls.frame.state, cls.api.PyExc_SystemError,
+                          "no locals when deleting %R", name)
+            cls.flow.error()
+        err = cls.api.PyObject_DelItem(ns, name)
+        # Can't use ERROR_IF here.
+        if err != 0:
+            format_exc_check_arg(cls.frame.state, cls.api.PyExc_NameError,
+                                 NAME_ERROR_MSG,
+                                 name)
+            cls.flow.error()
+        cls.flow.dispatch()

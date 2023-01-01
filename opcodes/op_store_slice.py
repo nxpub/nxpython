@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreSlice(OpCode):
@@ -10,18 +10,12 @@ class OpStoreSlice(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STORE_SLICE
     """
-    OPCODE_NAME = 'STORE_SLICE'
-    OPCODE_VALUE = 27
+    name = 'STORE_SLICE'
+    value = 27
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, v, container, start, stop) -> None:
-        # TARGET(STORE_SLICE) {
-        #     PyObject *stop = PEEK(1);
-        #     PyObject *start = PEEK(2);
-        #     PyObject *container = PEEK(3);
-        #     PyObject *v = PEEK(4);
+    @classmethod
+    def logic(cls) -> None:
+        # inst(STORE_SLICE, (v, container, start, stop -- )) {
         #     PyObject *slice = _PyBuildSlice_ConsumeRefs(start, stop);
         #     int err;
         #     if (slice == NULL) {
@@ -33,11 +27,20 @@ class OpStoreSlice(OpCode):
         #     }
         #     Py_DECREF(v);
         #     Py_DECREF(container);
-        #     if (err) goto pop_4_error;
-        #     STACK_SHRINK(4);
-        #     DISPATCH();
+        #     ERROR_IF(err, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        stop = cls.stack.peek(1)
+        start = cls.stack.peek(2)
+        container = cls.stack.peek(3)
+        v = cls.stack.peek(4)
+        slice = cls.api.private.PyBuildSlice_ConsumeRefs(start, stop)
+        if slice == None:
+            err = 1
+        else:
+            err = cls.api.PyObject_SetItem(container, slice, v)
+            cls.memory.dec_ref(slice)
+        cls.memory.dec_ref(v)
+        cls.memory.dec_ref(container)
+        cls.flow.error_if(err, 4)
+        cls.stack.shrink(4)
+        cls.flow.dispatch()

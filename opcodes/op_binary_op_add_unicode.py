@@ -1,22 +1,17 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBinaryOpAddUnicode(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'BINARY_OP_ADD_UNICODE'
-    OPCODE_VALUE = 7
+    name = 'BINARY_OP_ADD_UNICODE'
+    value = 7
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, unused, left, right) -> None:
-        # TARGET(BINARY_OP_ADD_UNICODE) {
-        #     PyObject *right = PEEK(1);
-        #     PyObject *left = PEEK(2);
-        #     PyObject *res;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(BINARY_OP_ADD_UNICODE, (unused/1, left, right -- res)) {
         #     assert(cframe.use_tracing == 0);
         #     DEOPT_IF(!PyUnicode_CheckExact(left), BINARY_OP);
         #     DEOPT_IF(Py_TYPE(right) != Py_TYPE(left), BINARY_OP);
@@ -24,13 +19,19 @@ class OpBinaryOpAddUnicode(OpCode):
         #     res = PyUnicode_Concat(left, right);
         #     _Py_DECREF_SPECIALIZED(left, _PyUnicode_ExactDealloc);
         #     _Py_DECREF_SPECIALIZED(right, _PyUnicode_ExactDealloc);
-        #     if (res == NULL) goto pop_2_error;
-        #     STACK_SHRINK(1);
-        #     POKE(1, res);
-        #     JUMPBY(1);
-        #     DISPATCH();
+        #     ERROR_IF(res == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        right = cls.stack.peek(1)
+        left = cls.stack.peek(2)
+        # assert(cframe.use_tracing == 0)
+        cls.flow.deopt_if(not cls.api.PyUnicode_CheckExact(left), 'BINARY_OP')
+        cls.flow.deopt_if(cls.api.Py_TYPE(right) != cls.api.Py_TYPE(left), 'BINARY_OP')
+        cls.flow.stat_inc('BINARY_OP', 'hit')
+        res = cls.api.PyUnicode_Concat(left, right)
+        cls.memory.dec_ref_specialized(left, cls.api.private.PyUnicode_ExactDealloc)
+        cls.memory.dec_ref_specialized(right, cls.api.private.PyUnicode_ExactDealloc)
+        cls.flow.error_if(res == None, 2)
+        cls.stack.shrink(1)
+        cls.stack.poke(1, res)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

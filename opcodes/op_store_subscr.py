@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreSubscr(OpCode):
@@ -8,19 +8,12 @@ class OpStoreSubscr(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STORE_SUBSCR
     """
-    OPCODE_NAME = 'STORE_SUBSCR'
-    OPCODE_VALUE = 60
+    name = 'STORE_SUBSCR'
+    value = 60
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, counter, v, container, sub) -> None:
-        # TARGET(STORE_SUBSCR) {
-        #     PREDICTED(STORE_SUBSCR);
-        #     PyObject *sub = PEEK(1);
-        #     PyObject *container = PEEK(2);
-        #     PyObject *v = PEEK(3);
-        #     uint16_t counter = read_u16(&next_instr[0].cache);
+    @classmethod
+    def logic(cls) -> None:
+        # inst(STORE_SUBSCR, (counter/1, v, container, sub -- )) {
         #     if (ADAPTIVE_COUNTER_IS_ZERO(counter)) {
         #         assert(cframe.use_tracing == 0);
         #         next_instr--;
@@ -32,15 +25,25 @@ class OpStoreSubscr(OpCode):
         #     DECREMENT_ADAPTIVE_COUNTER(cache->counter);
         #     /* container[sub] = v */
         #     int err = PyObject_SetItem(container, sub, v);
-        #     Py_DECREF(v);
-        #     Py_DECREF(container);
-        #     Py_DECREF(sub);
-        #     if (err) goto pop_3_error;
-        #     STACK_SHRINK(3);
-        #     JUMPBY(1);
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(err, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        sub = cls.stack.peek(1)
+        container = cls.stack.peek(2)
+        v = cls.stack.peek(3)
+        counter = read_u16(next_instr[0].cache)
+        if ADAPTIVE_COUNTER_IS_ZERO(counter):
+            # assert(cframe.use_tracing == 0)
+            next_instr--
+            cls.api.private.Py_Specialize_StoreSubscr(container, sub, next_instr)
+            DISPATCH_SAME_OPARG()
+        cls.flow.stat_inc('STORE_SUBSCR', 'deferred')
+        # container[sub] = v 
+        err = cls.api.PyObject_SetItem(container, sub, v)
+        cls.memory.dec_ref(v)
+        cls.memory.dec_ref(container)
+        cls.memory.dec_ref(sub)
+        cls.flow.error_if(err, 3)
+        cls.stack.shrink(3)
+        cls.flow.cache_offset(1)
+        cls.flow.dispatch()

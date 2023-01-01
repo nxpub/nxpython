@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpForIter(OpCode):
@@ -13,15 +13,13 @@ class OpForIter(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-FOR_ITER
     """
-    OPCODE_NAME = 'FOR_ITER'
-    OPCODE_VALUE = 93
+    name = 'FOR_ITER'
+    value = 93
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(FOR_ITER) {
-        #     PREDICTED(FOR_ITER);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: ( -- __0)
+        # inst(FOR_ITER) {
         #     _PyForIterCache *cache = (_PyForIterCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -55,9 +53,24 @@ class OpForIter(OpCode):
         #         /* Skip END_FOR */
         #         JUMPBY(INLINE_CACHE_ENTRIES_FOR_ITER + oparg + 1);
         #     }
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # before: [iter] after: [iter, iter()] *or* [] 
+        iter = cls.stack.top()
+        next = (*Py_TYPE(iter).tp_iternext)(iter)
+        if next != None:
+            cls.stack.push(next)
+            cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_FOR_ITER)
+        else:
+            if cls.api.private.PyErr_Occurred(cls.frame.state):
+                if not cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_StopIteration):
+                    cls.flow.error()
+                elif cls.frame.state.c_tracefunc != None:
+                    call_exc_trace(cls.frame.state.c_tracefunc, cls.frame.state.c_traceobj, cls.frame.state, frame)
+                cls.api.private.PyErr_Clear(cls.frame.state)
+            # iterator ended normally 
+            # assert(_Py_OPCODE(next_instr[INLINE_CACHE_ENTRIES_FOR_ITER + oparg]) == END_FOR)
+            cls.stack.shrink(1)
+            cls.memory.dec_ref(iter)
+            # Skip END_FOR 
+            cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_FOR_ITER + oparg + 1)
+        cls.flow.dispatch()

@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadBuildClass(OpCode):
@@ -9,15 +9,12 @@ class OpLoadBuildClass(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_BUILD_CLASS
     """
-    OPCODE_NAME = 'LOAD_BUILD_CLASS'
-    OPCODE_VALUE = 71
+    name = 'LOAD_BUILD_CLASS'
+    value = 71
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_BUILD_CLASS) {
-        #     PyObject *bc;
+    @classmethod
+    def logic(cls) -> None:
+        # inst(LOAD_BUILD_CLASS, ( -- bc)) {
         #     if (PyDict_CheckExact(BUILTINS())) {
         #         bc = _PyDict_GetItemWithError(BUILTINS(),
         #                                       &_Py_ID(__build_class__));
@@ -26,7 +23,7 @@ class OpLoadBuildClass(OpCode):
         #                 _PyErr_SetString(tstate, PyExc_NameError,
         #                                  "__build_class__ not found");
         #             }
-        #             goto error;
+        #             ERROR_IF(true, error);
         #         }
         #         Py_INCREF(bc);
         #     }
@@ -36,13 +33,26 @@ class OpLoadBuildClass(OpCode):
         #             if (_PyErr_ExceptionMatches(tstate, PyExc_KeyError))
         #                 _PyErr_SetString(tstate, PyExc_NameError,
         #                                  "__build_class__ not found");
-        #             goto error;
+        #             ERROR_IF(true, error);
         #         }
         #     }
-        #     PUSH(bc);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        if cls.api.PyDict_CheckExact(cls.frame.get_builtins()):
+            bc = cls.api.private.PyDict_GetItemWithError(cls.frame.get_builtins(),
+                                          cls.api.private.Py_ID('__build_class__'))
+            if bc == None:
+                if not cls.api.private.PyErr_Occurred(cls.frame.state):
+                    cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_NameError,
+                                     "__build_class__ not found")
+                cls.flow.error_if(True)
+            cls.memory.inc_ref(bc)
+        else:
+            bc = cls.api.PyObject_GetItem(cls.frame.get_builtins(), cls.api.private.Py_ID('__build_class__'))
+            if bc == None:
+                if cls.api.private.PyErr_ExceptionMatches(cls.frame.state, cls.api.PyExc_KeyError):
+                    cls.api.private.PyErr_SetString(cls.frame.state, cls.api.PyExc_NameError,
+                                     "__build_class__ not found")
+                cls.flow.error_if(True)
+        cls.stack.grow(1)
+        cls.stack.poke(1, bc)
+        cls.flow.dispatch()

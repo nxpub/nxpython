@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpAsyncGenWrap(OpCode):
@@ -11,25 +11,21 @@ class OpAsyncGenWrap(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-ASYNC_GEN_WRAP
     """
-    OPCODE_NAME = 'ASYNC_GEN_WRAP'
-    OPCODE_VALUE = 87
+    name = 'ASYNC_GEN_WRAP'
+    value = 87
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(ASYNC_GEN_WRAP) {
-        #     PyObject *v = TOP();
+    @classmethod
+    def logic(cls) -> None:
+        # inst(ASYNC_GEN_WRAP, (v -- w)) {
         #     assert(frame->f_code->co_flags & CO_ASYNC_GENERATOR);
-        #     PyObject *w = _PyAsyncGenValueWrapperNew(v);
-        #     if (w == NULL) {
-        #         goto error;
-        #     }
-        #     SET_TOP(w);
-        #     Py_DECREF(v);
-        #     DISPATCH();
+        #     w = _PyAsyncGenValueWrapperNew(v);
+        #     DECREF_INPUTS();
+        #     ERROR_IF(w == NULL, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        v = cls.stack.peek(1)
+        # assert(frame->f_code->co_flags & CO_ASYNC_GENERATOR)
+        w = cls.api.private.PyAsyncGenValueWrapperNew(v)
+        cls.memory.dec_ref(v)
+        cls.flow.error_if(w == None, 1)
+        cls.stack.poke(1, w)
+        cls.flow.dispatch()

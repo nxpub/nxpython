@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadFast(OpCode):
@@ -11,23 +11,19 @@ class OpLoadFast(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_FAST
     """
-    OPCODE_NAME = 'LOAD_FAST'
-    OPCODE_VALUE = 124
+    name = 'LOAD_FAST'
+    value = 124
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_FAST) {
-        #     PyObject *value;
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(LOAD_FAST, (-- value)) {
         #     value = GETLOCAL(oparg);
         #     assert(value != NULL);
         #     Py_INCREF(value);
-        #     STACK_GROW(1);
-        #     POKE(1, value);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.frame.get_local(oparg)
+        # assert(value != NULL)
+        cls.memory.inc_ref(value)
+        cls.stack.grow(1)
+        cls.stack.poke(1, value)
+        cls.flow.dispatch()

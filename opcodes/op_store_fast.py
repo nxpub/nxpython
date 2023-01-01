@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpStoreFast(OpCode):
@@ -8,20 +8,15 @@ class OpStoreFast(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-STORE_FAST
     """
-    OPCODE_NAME = 'STORE_FAST'
-    OPCODE_VALUE = 125
+    name = 'STORE_FAST'
+    value = 125
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self, value) -> None:
-        # TARGET(STORE_FAST) {
-        #     PyObject *value = PEEK(1);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(STORE_FAST, (value --)) {
         #     SETLOCAL(oparg, value);
-        #     STACK_SHRINK(1);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        value = cls.stack.peek(1)
+        SETLOCAL(oparg, value)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

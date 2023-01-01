@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpSetUpdate(OpCode):
@@ -10,24 +10,21 @@ class OpSetUpdate(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-SET_UPDATE
     """
-    OPCODE_NAME = 'SET_UPDATE'
-    OPCODE_VALUE = 163
+    name = 'SET_UPDATE'
+    value = 163
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(SET_UPDATE) {
-        #     PyObject *iterable = POP();
-        #     PyObject *set = PEEK(oparg);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # inst(SET_UPDATE, (iterable --)) {
+        #     PyObject *set = PEEK(oparg + 1);  // iterable is still on the stack
         #     int err = _PySet_Update(set, iterable);
-        #     Py_DECREF(iterable);
-        #     if (err < 0) {
-        #         goto error;
-        #     }
-        #     DISPATCH();
+        #     DECREF_INPUTS();
+        #     ERROR_IF(err < 0, error);
         # }
-        raise NotImplementedError
-
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        iterable = cls.stack.peek(1)
+        set = cls.stack.peek(oparg + 1)  # iterable is still on the stack
+        err = cls.api.private.PySet_Update(set, iterable)
+        cls.memory.dec_ref(iterable)
+        cls.flow.error_if(err < 0, 1)
+        cls.stack.shrink(1)
+        cls.flow.dispatch()

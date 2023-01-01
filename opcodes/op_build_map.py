@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpBuildMap(OpCode):
@@ -13,14 +13,13 @@ class OpBuildMap(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-BUILD_MAP
     """
-    OPCODE_NAME = 'BUILD_MAP'
-    OPCODE_VALUE = 105
+    name = 'BUILD_MAP'
+    value = 105
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(BUILD_MAP) {
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // stack effect: (__array[oparg*2] -- __0)
+        # inst(BUILD_MAP) {
         #     PyObject *map = _PyDict_FromItems(
         #             &PEEK(2*oparg), 2,
         #             &PEEK(2*oparg - 1), 2,
@@ -33,9 +32,16 @@ class OpBuildMap(OpCode):
         #         Py_DECREF(POP());
         #     }
         #     PUSH(map);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        map = cls.api.private.PyDict_FromItems(
+                cls.stack.peek(2*oparg), 2,
+                cls.stack.peek(2*oparg - 1), 2,
+                oparg)
+        if map == None:
+            cls.flow.error()
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        for oparg in range(oparg, 0, -1):
+            cls.memory.dec_ref(cls.stack.pop())
+            cls.memory.dec_ref(cls.stack.pop())
+        cls.stack.push(map)
+        cls.flow.dispatch()

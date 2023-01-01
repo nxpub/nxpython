@@ -1,5 +1,5 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAttr(OpCode):
@@ -20,15 +20,13 @@ class OpLoadAttr(OpCode):
 
     https://docs.python.org/3.12/library/dis.html#opcode-LOAD_ATTR
     """
-    OPCODE_NAME = 'LOAD_ATTR'
-    OPCODE_VALUE = 106
+    name = 'LOAD_ATTR'
+    value = 106
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ATTR) {
-        #     PREDICTED(LOAD_ATTR);
+    @classmethod
+    def logic(cls, oparg: int) -> None:
+        # // error: LOAD_ATTR has irregular stack effect
+        # inst(LOAD_ATTR) {
         #     _PyAttrCache *cache = (_PyAttrCache *)next_instr;
         #     if (ADAPTIVE_COUNTER_IS_ZERO(cache->counter)) {
         #         assert(cframe.use_tracing == 0);
@@ -84,9 +82,43 @@ class OpLoadAttr(OpCode):
         #         SET_TOP(res);
         #     }
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_ATTR);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        name = cls.frame.get_name(oparg >> 1)
+        owner = cls.stack.top()
+        if oparg & 1:
+            # Designed to work in tandem with CALL. 
+            cls.api.PyObject* meth = None
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+            meth_found = cls.api.private.PyObject_GetMethod(owner, name, meth)
+
+            if meth == None:
+                # Most likely attribute wasn't found. 
+                cls.flow.error()
+
+            if meth_found:
+                # We can bypass temporary bound method object.
+        #            meth is unbound method and obj is self.
+
+        #            meth | self | arg1 | ... | argN
+        #          
+                cls.stack.set_top(meth)
+                cls.stack.push(owner)  # self
+            else:
+                # meth is not an unbound method (but a regular attr, or
+        #            something was returned by a descriptor protocol).  Set
+        #            the second element of the stack to NULL, to signal
+        #            CALL that it's not a method call.
+
+        #            NULL | meth | arg1 | ... | argN
+        #         
+                cls.stack.set_top(None)
+                cls.memory.dec_ref(owner)
+                cls.stack.push(meth)
+        else:
+            res = cls.api.PyObject_GetAttr(owner, name)
+            if res == None:
+                cls.flow.error()
+            cls.memory.dec_ref(owner)
+            cls.stack.set_top(res)
+        cls.flow.skip(cls.api.internal.INLINE_CACHE_ENTRIES_LOAD_ATTR)
+        cls.flow.dispatch()

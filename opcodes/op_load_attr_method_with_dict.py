@@ -1,19 +1,18 @@
 # Auto-generated via https://github.com/python/cpython/blob/main/Python/bytecodes.c
-from .base import OpCode
+from opcodes import OpCode
 
 
 class OpLoadAttrMethodWithDict(OpCode):
     """
     TODO: Cannot find documentation via dis docs!
     """
-    OPCODE_NAME = 'LOAD_ATTR_METHOD_WITH_DICT'
-    OPCODE_VALUE = 81
+    name = 'LOAD_ATTR_METHOD_WITH_DICT'
+    value = 81
 
-    def extract(self, stack) -> None:
-        raise NotImplementedError
-
-    def transform(self) -> None:
-        # TARGET(LOAD_ATTR_METHOD_WITH_DICT) {
+    @classmethod
+    def logic(cls) -> None:
+        # // error: LOAD_ATTR has irregular stack effect
+        # inst(LOAD_ATTR_METHOD_WITH_DICT) {
         #     /* Can be either a managed dict, or a tp_dictoffset offset.*/
         #     assert(cframe.use_tracing == 0);
         #     PyObject *self = TOP();
@@ -37,9 +36,10 @@ class OpLoadAttrMethodWithDict(OpCode):
         #     SET_TOP(Py_NewRef(res));
         #     PUSH(self);
         #     JUMPBY(INLINE_CACHE_ENTRIES_LOAD_ATTR);
-        #     DISPATCH();
         # }
-        raise NotImplementedError
+        # Can be either a managed dict, or a tp_dictoffset offset.
+        # assert(cframe.use_tracing == 0)
+        self = cls.stack.top()
+        self_cls = cls.api.Py_TYPE(self)
 
-    def load(self, stack) -> None:
-        raise NotImplementedError
+        # Treat index as a signed 16 bit value 
